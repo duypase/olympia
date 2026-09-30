@@ -79,10 +79,16 @@ export function isMuted(): boolean {
   return isSoundMuted;
 }
 
+const BASE_URL = import.meta.env.BASE_URL || '/';
+const getAssetUrl = (path: string) => {
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `${BASE_URL}${cleanPath}`;
+};
+
 const ROUND1_AUDIO_PATHS = [
-  "/round1_10s_1.ogg",
-  "/round1_10s_2.ogg",
-  "/round1_10s_3.ogg",
+  getAssetUrl('/round1_10s_1.ogg'),
+  getAssetUrl('/round1_10s_2.ogg'),
+  getAssetUrl('/round1_10s_3.ogg'),
 ];
 
 let countdownAudiosR1: HTMLAudioElement[] | null = null;
@@ -121,7 +127,7 @@ export function getTimerAudio(round: 1 | 2 = 1): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (round === 2) {
     if (!countdownAudioR2) {
-      countdownAudioR2 = new Audio("/round2_timer.mpeg");
+      countdownAudioR2 = new Audio(getAssetUrl("/round2_timer.mpeg"));
       countdownAudioR2.preload = "auto";
     }
     return countdownAudioR2;
@@ -219,7 +225,7 @@ let correctAudio: HTMLAudioElement | null = null;
 export function getSolvedAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!solvedAudio) {
-    solvedAudio = new Audio("/round2_solved.mpeg");
+    solvedAudio = new Audio(getAssetUrl("/round2_solved.mpeg"));
     solvedAudio.preload = "auto";
   }
   return solvedAudio;
@@ -228,7 +234,7 @@ export function getSolvedAudio(): HTMLAudioElement | null {
 export function getSolvedBedAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!solvedBedAudio) {
-    solvedBedAudio = new Audio("/solved_bed_round2.wav");
+    solvedBedAudio = new Audio(getAssetUrl("/solved_bed_round2.wav"));
     solvedBedAudio.preload = "auto";
   }
   return solvedBedAudio;
@@ -237,7 +243,7 @@ export function getSolvedBedAudio(): HTMLAudioElement | null {
 export function getClueRevealAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!correctAudio) {
-    correctAudio = new Audio("/correct.wav");
+    correctAudio = new Audio(getAssetUrl("/correct.wav"));
     correctAudio.preload = "auto";
   }
   return correctAudio;
@@ -291,7 +297,7 @@ let round1NextQuestionAudio: HTMLAudioElement | null = null;
 export function getRound1NextQuestionAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!round1NextQuestionAudio) {
-    round1NextQuestionAudio = new Audio("/round1_nextq.ogg");
+    round1NextQuestionAudio = new Audio(getAssetUrl("/round1_nextq.ogg"));
     round1NextQuestionAudio.preload = "auto";
   }
   return round1NextQuestionAudio;
@@ -317,7 +323,7 @@ let lastChooseRowPlayTime = 0;
 export function getRound2ChooseRowAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!round2ChooseRowAudio) {
-    round2ChooseRowAudio = new Audio("/round2_chooserow.wav");
+    round2ChooseRowAudio = new Audio(getAssetUrl("/round2_chooserow.wav"));
     round2ChooseRowAudio.preload = "auto";
   }
   return round2ChooseRowAudio;
@@ -346,7 +352,7 @@ let lastObstacleSolvedPlayTime = 0;
 export function getObstacleSolvedAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!obstacleSolvedAudio) {
-    obstacleSolvedAudio = new Audio("/round2_keyword_solved.ogg");
+    obstacleSolvedAudio = new Audio(getAssetUrl("/round2_keyword_solved.ogg"));
     obstacleSolvedAudio.preload = "auto";
   }
   return obstacleSolvedAudio;
@@ -383,7 +389,7 @@ let creditsAudio: HTMLAudioElement | null = null;
 export function getCreditsAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
   if (!creditsAudio) {
-    creditsAudio = new Audio("/credits.wav");
+    creditsAudio = new Audio(getAssetUrl("/credits.wav"));
     creditsAudio.preload = "auto";
   }
   return creditsAudio;
