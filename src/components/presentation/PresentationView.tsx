@@ -4,6 +4,7 @@ import { PresentationRound1 } from './PresentationRound1';
 import { PresentationObstacleBoard } from './PresentationObstacleBoard';
 import { PresentationScoreboard } from './PresentationScoreboard';
 import { PresentationStandbyScreen } from './PresentationStandbyScreen';
+import { PresentationFinalSummary } from './PresentationFinalSummary';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { unlockAudioContext } from '../../utils/audio';
 
@@ -60,8 +61,10 @@ export const PresentationView: React.FC = () => {
           <PresentationStandbyScreen round={state.round} />
         ) : state.round === 1 ? (
           <PresentationRound1 />
-        ) : (
+        ) : state.round === 2 ? (
           <PresentationObstacleBoard />
+        ) : (
+          <PresentationFinalSummary />
         )}
       </main>
     </div>

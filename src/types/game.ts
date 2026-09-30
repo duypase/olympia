@@ -41,14 +41,13 @@ export type GamePhase =
   | 'OBSTACLE_GUESSING';  // Đang trong trạng thái có đội xin đoán chướng ngại vật
 
 export type GameState = {
-  round: 1 | 2;
+  round: 1 | 2 | 3;
   phase: GamePhase;
   isStandby: boolean; // Trạng thái màn hình chờ (true: hiện màn hình tên vòng thi, false: vào giao diện thi đấu)
   teams: Team[];
   activeTeamId: string | null;
   timerSeconds: number;
   isTimerRunning: boolean;
-  isTimerIntroDelaying?: boolean; // 1 giây intro trễ trước khi timer xuất hiện và bắt đầu đếm ngược
   scoreModifier: number; // Điểm sẽ cộng nếu chọn ĐÚNG (mặc định 10)
   
   // Vòng 1
@@ -58,20 +57,33 @@ export type GameState = {
     selectedOptionIndex: number | null;
     lastResult: 'CORRECT' | 'WRONG' | 'TIMEOUT' | 'SKIPPED' | null;
     lastPointsAwarded: number;
+    nextQuestionTrigger?: number; // timestamp to trigger new question sfx
   };
 
   // Vòng 2
   round2: {
     obstacle: ObstacleData;
-    activeClueId: number | null; // 1..4
+    activeClueId: number | null; // 1..6
     obstacleSolvedBy: string | null; // team id nếu đã giải được
     lastResult: 'CORRECT' | 'WRONG' | 'TIMEOUT' | 'SKIPPED' | null;
     lastPointsAwarded: number;
+    cueCorrectTrigger?: number; // timestamp to trigger solved fanfare & bed
+    clueRevealTrigger?: number; // timestamp to trigger clue reveal sound
+    isQuestionVisible?: boolean; // cờ ẩn/hiện card câu hỏi trên màn hình chiếu
+    chooseRowTrigger?: number; // timestamp to trigger choose row sound
+    obstacleSolvedTrigger?: number; // timestamp to trigger obstacle keyword solved sound
+  };
+
+  // Màn hình tổng kết điểm & trao giải (Round 3)
+  summary: {
+    revealStep: number; // 0: Sẵn sàng, 1: Top 3, 2: Top 2, 3: Top 1, 4: Top 4-6
+    isCreditsPlaying: boolean;
+    confettiTrigger?: number;
   };
 };
 
 export type GameAction =
-  | { type: 'SET_ROUND'; round: 1 | 2 }
+  | { type: 'SET_ROUND'; round: 1 | 2 | 3 }
   | { type: 'SET_STANDBY'; isStandby: boolean }
   | { type: 'START_QUESTION' }
   | { type: 'BEGIN_COUNTDOWN' }
@@ -93,9 +105,19 @@ export type GameAction =
   | { type: 'REMOVE_TEAM'; teamId: string }
   // Round 2 specific
   | { type: 'SELECT_CLUE'; clueId: number }
+  | { type: 'UNSELECT_CLUE' }
+  | { type: 'TOGGLE_CLUE_QUESTION' }
   | { type: 'REVEAL_CLUE_PIECE'; clueId: number }
+  | { type: 'CUE_CORRECT_ANSWER'; clueId: number }
   | { type: 'START_OBSTACLE_GUESS'; teamId: string }
   | { type: 'SUBMIT_OBSTACLE_GUESS'; isCorrect: boolean; pointsOverride?: number }
   | { type: 'REVEAL_FULL_OBSTACLE' }
+  // Round 3 / Summary specific
+  | { type: 'SET_SUMMARY_STEP'; step: number }
+  | { type: 'NEXT_SUMMARY_STEP' }
+  | { type: 'PREV_SUMMARY_STEP' }
+  | { type: 'RESET_SUMMARY_STEP' }
+  | { type: 'TRIGGER_SUMMARY_CONFETTI' }
+  | { type: 'TOGGLE_CREDITS_MUSIC'; isPlaying?: boolean }
   | { type: 'RESET_GAME' }
   | { type: 'SYNC_STATE'; state: GameState };

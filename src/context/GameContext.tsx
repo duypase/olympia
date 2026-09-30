@@ -17,6 +17,10 @@ import {
   stopTimerSoundtrack,
   pauseTimerSoundtrack,
   resumeTimerSoundtrack,
+  stopSolvedRound2,
+  stopObstacleSolvedSound,
+  playCreditsSound,
+  stopCreditsSound,
 } from '../utils/audio';
 import {
   broadcastGameState,
@@ -46,35 +50,63 @@ const INITIAL_STATE: GameState = {
     obstacleSolvedBy: null,
     lastResult: null,
     lastPointsAwarded: 0,
+    isQuestionVisible: false,
+  },
+  summary: {
+    revealStep: 0,
+    isCreditsPlaying: false,
+    confettiTrigger: 0,
   },
 };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'SYNC_STATE':
-      return action.state;
+      return {
+        ...INITIAL_STATE,
+        ...action.state,
+        summary: {
+          ...INITIAL_STATE.summary,
+          ...(action.state?.summary || {}),
+        },
+      };
 
     case 'SET_STANDBY':
       return {
         ...state,
         isStandby: action.isStandby,
         isTimerRunning: false, // Dừng timer khi về standby
+        ...(state.round === 1 && !action.isStandby
+          ? {
+              round1: {
+                ...state.round1,
+                nextQuestionTrigger: Date.now(),
+              },
+            }
+          : {}),
       };
 
     case 'SET_ROUND': {
       const newRound = action.round;
       const initialTimer = newRound === 1 
         ? state.round1.questions[state.round1.currentQuestionIndex]?.timeLimit || 10
-        : 15;
+        : newRound === 2 ? 20 : 0;
       return {
         ...state,
         round: newRound,
         phase: 'IDLE',
-        isStandby: true, // Khi chuyển vòng, tự động chuyển về màn hình chờ của vòng đó
+        isStandby: newRound !== 3, // Khi chuyển vòng, tự động chuyển về màn hình chờ (riêng Round 3 vào thẳng tổng kết)
         activeTeamId: null,
         isTimerRunning: false,
         timerSeconds: initialTimer,
-        scoreModifier: newRound === 1 ? 10 : 10,
+        scoreModifier: 10,
+        summary: newRound === 3
+          ? {
+              ...state.summary,
+              revealStep: 0,
+              isCreditsPlaying: true,
+            }
+          : state.summary,
       };
     }
 
@@ -84,7 +116,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         seconds = state.round1.questions[state.round1.currentQuestionIndex]?.timeLimit || 10;
       } else if (state.round === 2 && state.round2.activeClueId !== null) {
         const clue = state.round2.obstacle.clues.find(c => c.id === state.round2.activeClueId);
-        seconds = clue?.timeLimit || 15;
+        seconds = clue?.timeLimit || 20;
       }
       return {
         ...state,
@@ -92,8 +124,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isStandby: false, // Tự động thoát màn hình chờ khi bắt đầu đọc câu hỏi
         activeTeamId: null,
         timerSeconds: seconds,
-        isTimerRunning: true, // Bắt đầu timer ngay lập tức
-        isTimerIntroDelaying: false,
+        isTimerRunning: true, // Bắt đầu đếm ngay lập tức
         scoreModifier: 10,
         round1: {
           ...state.round1,
@@ -112,7 +143,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'BEGIN_COUNTDOWN':
       return {
         ...state,
-        isTimerIntroDelaying: false,
         isTimerRunning: true,
       };
 
@@ -129,7 +159,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         phase: 'RESULT_REVEAL',
         isTimerRunning: false,
-        isTimerIntroDelaying: false,
         round1: {
           ...state.round1,
           selectedOptionIndex: action.optionIndex,
@@ -140,17 +169,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'PAUSE_TIMER':
-      return { ...state, isTimerRunning: false, isTimerIntroDelaying: false };
+      return { ...state, isTimerRunning: false };
 
     case 'RESUME_TIMER':
-      return { ...state, isTimerRunning: true, isTimerIntroDelaying: false };
+      return { ...state, isTimerRunning: true };
 
     case 'RESET_TIMER':
       return {
         ...state,
         timerSeconds: action.seconds,
         isTimerRunning: false,
-        isTimerIntroDelaying: false,
       };
 
     case 'TICK_TIMER': {
@@ -161,7 +189,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           ...state,
           timerSeconds: 0,
           isTimerRunning: false,
-          isTimerIntroDelaying: false,
           phase: 'RESULT_REVEAL',
           round1: {
             ...state.round1,
@@ -258,6 +285,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'NEXT_QUESTION': {
       if (state.round === 1) {
         const nextIdx = Math.min(state.round1.currentQuestionIndex + 1, state.round1.questions.length - 1);
+        if (nextIdx === state.round1.currentQuestionIndex) {
+          return state;
+        }
         const nextTime = state.round1.questions[nextIdx]?.timeLimit || 10;
         return {
           ...state,
@@ -272,6 +302,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             selectedOptionIndex: null,
             lastResult: null,
             lastPointsAwarded: 0,
+            nextQuestionTrigger: Date.now(),
           },
         };
       }
@@ -281,6 +312,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'PREV_QUESTION': {
       if (state.round === 1) {
         const prevIdx = Math.max(state.round1.currentQuestionIndex - 1, 0);
+        if (prevIdx === state.round1.currentQuestionIndex) {
+          return state;
+        }
         const prevTime = state.round1.questions[prevIdx]?.timeLimit || 10;
         return {
           ...state,
@@ -294,6 +328,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             selectedOptionIndex: null,
             lastResult: null,
             lastPointsAwarded: 0,
+            nextQuestionTrigger: Date.now(),
           },
         };
       }
@@ -348,19 +383,66 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     // Round 2
     case 'SELECT_CLUE': {
+      // Nếu bấm lại vào hàng ngang đang được chọn -> UNSELECT (bỏ chọn)
+      if (state.round2.activeClueId === action.clueId) {
+        return {
+          ...state,
+          phase: 'IDLE',
+          activeTeamId: null,
+          isTimerRunning: false,
+          timerSeconds: 0,
+          round2: {
+            ...state.round2,
+            activeClueId: null,
+            isQuestionVisible: false,
+            lastResult: null,
+            lastPointsAwarded: 0,
+          },
+        };
+      }
+
       const clue = state.round2.obstacle.clues.find(c => c.id === action.clueId);
       return {
         ...state,
         phase: 'IDLE',
         activeTeamId: null,
         isTimerRunning: false,
-        timerSeconds: clue?.timeLimit || 15,
+        timerSeconds: clue?.timeLimit || 20,
         scoreModifier: 10,
         round2: {
           ...state.round2,
           activeClueId: action.clueId,
+          isQuestionVisible: false, // Ban đầu ẩn câu hỏi để MC đọc hàng ngang
           lastResult: null,
           lastPointsAwarded: 0,
+          chooseRowTrigger: Date.now(),
+        },
+      };
+    }
+
+    case 'UNSELECT_CLUE': {
+      return {
+        ...state,
+        phase: 'IDLE',
+        activeTeamId: null,
+        isTimerRunning: false,
+        timerSeconds: 0,
+        round2: {
+          ...state.round2,
+          activeClueId: null,
+          isQuestionVisible: false,
+          lastResult: null,
+          lastPointsAwarded: 0,
+        },
+      };
+    }
+
+    case 'TOGGLE_CLUE_QUESTION': {
+      return {
+        ...state,
+        round2: {
+          ...state.round2,
+          isQuestionVisible: !state.round2.isQuestionVisible,
         },
       };
     }
@@ -370,6 +452,26 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         round2: {
           ...state.round2,
+          clueRevealTrigger: Date.now(),
+          obstacle: {
+            ...state.round2.obstacle,
+            clues: state.round2.obstacle.clues.map(c =>
+              c.id === action.clueId ? { ...c, isRevealed: true } : c
+            ),
+          },
+        },
+      };
+    }
+
+    case 'CUE_CORRECT_ANSWER': {
+      return {
+        ...state,
+        isTimerRunning: false,
+        phase: 'RESULT_REVEAL',
+        round2: {
+          ...state.round2,
+          cueCorrectTrigger: Date.now(),
+          lastResult: 'CORRECT',
           obstacle: {
             ...state.round2.obstacle,
             clues: state.round2.obstacle.clues.map(c =>
@@ -404,6 +506,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           round2: {
             ...state.round2,
             obstacleSolvedBy: state.activeTeamId,
+            obstacleSolvedTrigger: Date.now(),
             obstacle: {
               ...state.round2.obstacle,
               isFullyRevealed: true,
@@ -437,6 +540,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         round2: {
           ...state.round2,
+          obstacleSolvedTrigger: Date.now(),
           obstacle: {
             ...state.round2.obstacle,
             isFullyRevealed: true,
@@ -444,6 +548,78 @@ function gameReducer(state: GameState, action: GameAction): GameState {
           },
         },
       };
+
+    case 'SET_SUMMARY_STEP': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      const step = Math.max(0, Math.min(4, action.step));
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          revealStep: step,
+          confettiTrigger: step === 3 ? Date.now() : currentSummary.confettiTrigger,
+        },
+      };
+    }
+
+    case 'NEXT_SUMMARY_STEP': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      const nextStep = Math.min(currentSummary.revealStep + 1, 4);
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          revealStep: nextStep,
+          confettiTrigger: nextStep === 3 ? Date.now() : currentSummary.confettiTrigger,
+        },
+      };
+    }
+
+    case 'PREV_SUMMARY_STEP': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      const prevStep = Math.max(currentSummary.revealStep - 1, 0);
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          revealStep: prevStep,
+        },
+      };
+    }
+
+    case 'RESET_SUMMARY_STEP': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          revealStep: 0,
+        },
+      };
+    }
+
+    case 'TRIGGER_SUMMARY_CONFETTI': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          confettiTrigger: Date.now(),
+        },
+      };
+    }
+
+    case 'TOGGLE_CREDITS_MUSIC': {
+      const currentSummary = state.summary || INITIAL_STATE.summary;
+      const isPlaying = action.isPlaying !== undefined ? action.isPlaying : !currentSummary.isCreditsPlaying;
+      return {
+        ...state,
+        summary: {
+          ...currentSummary,
+          isCreditsPlaying: isPlaying,
+        },
+      };
+    }
 
     case 'RESET_GAME': {
       if (typeof window !== 'undefined') {
@@ -504,7 +680,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             correctOptionIndex: getCorrectOptionIndex(q),
           }));
         }
-        return parsed;
+        return {
+          ...defaultState,
+          ...parsed,
+          summary: {
+            ...defaultState.summary,
+            ...(parsed.summary || {}),
+          },
+        };
       }
     } catch {
       // ignore
@@ -533,20 +716,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isPresentationView) {
           const prevState = stateRef.current;
           // Check for newly revealed result (Round 1 or Round 2)
-          if (remoteState.phase === 'RESULT_REVEAL' && prevState.phase !== 'RESULT_REVEAL') {
-            const r1Res = remoteState.round1.lastResult;
-            const r2Res = remoteState.round2.lastResult;
-            if (remoteState.round === 1) {
-              if (r1Res === 'CORRECT') playCorrect();
-              else if (r1Res === 'WRONG') playWrong();
-            } else if (remoteState.round === 2) {
-              if (remoteState.round2.obstacleSolvedBy && !prevState.round2.obstacleSolvedBy) {
-                playVictory();
-              } else if (r2Res === 'CORRECT') {
-                playCorrect();
-              } else if (r2Res === 'WRONG') {
-                playWrong();
-              }
+          const prevR1Option = prevState.round1?.selectedOptionIndex ?? null;
+          const newR1Option = remoteState.round1?.selectedOptionIndex ?? null;
+          const prevR1Result = prevState.round1?.lastResult ?? null;
+          const newR1Result = remoteState.round1?.lastResult ?? null;
+
+          const isR1NewReveal =
+            newR1Option !== null &&
+            (newR1Option !== prevR1Option || (newR1Result !== prevR1Result && (newR1Result === 'CORRECT' || newR1Result === 'WRONG')));
+
+          const prevR2Result = prevState.round2?.lastResult ?? null;
+          const newR2Result = remoteState.round2?.lastResult ?? null;
+          const isR2NewReveal =
+            newR2Result !== prevR2Result && (newR2Result === 'CORRECT' || newR2Result === 'WRONG');
+
+          if (remoteState.round === 1) {
+            if (isR1NewReveal) {
+              if (newR1Result === 'CORRECT') playCorrect();
+              else if (newR1Result === 'WRONG') playWrong();
+            }
+          } else if (remoteState.round === 2) {
+            if (remoteState.round2.obstacleSolvedBy && !prevState.round2.obstacleSolvedBy) {
+              playVictory();
+            } else if (isR2NewReveal) {
+              if (newR2Result === 'WRONG') playWrong();
             }
           } else if (
             remoteState.round2?.obstacle?.isFullyRevealed &&
@@ -587,28 +780,61 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [state.isTimerRunning, state.timerSeconds, isPresentationView]);
 
-  // Synchronize timer soundtrack with running state: start immediately on start/resume, pause if paused
+  // Synchronize timer soundtrack with running state
+  const prevIsActiveRef = useRef(false);
+
   useEffect(() => {
-    if (state.isTimerRunning && state.timerSeconds > 0) {
-      if (state.timerSeconds >= 9.5) {
-        startTimerSoundtrack();
-      } else {
-        resumeTimerSoundtrack();
+    const isActive = state.isTimerRunning;
+    const wasActive = prevIsActiveRef.current;
+    prevIsActiveRef.current = isActive;
+
+    const currentRound = state.round;
+    if (currentRound === 3) return;
+    const totalSeconds = currentRound === 1
+      ? (state.round1.questions[state.round1.currentQuestionIndex]?.timeLimit || 10)
+      : (state.round2.obstacle.clues.find(c => c.id === state.round2.activeClueId)?.timeLimit || 20);
+
+    if (isActive && state.timerSeconds > 0) {
+      if (!wasActive) {
+        if (state.timerSeconds >= totalSeconds - 0.5) {
+          startTimerSoundtrack(currentRound);
+        } else {
+          resumeTimerSoundtrack(currentRound);
+        }
       }
-    } else if (!state.isTimerRunning) {
+    } else if (!isActive) {
       // Khi tạm dừng hoặc câu hỏi bị dừng giữa chừng (nhưng KHÔNG ngắt khi timerSeconds === 0 để nhạc chạy hết file)
       if (state.timerSeconds > 0) {
         pauseTimerSoundtrack();
       }
     }
-  }, [state.isTimerRunning, state.timerSeconds]);
+  }, [state.isTimerRunning, state.timerSeconds, state.round]);
 
   // Stop soundtrack ONLY when switching questions, clues, entering standby, or resetting game
   useEffect(() => {
     if (state.isStandby || state.phase === 'IDLE') {
       stopTimerSoundtrack();
+      stopSolvedRound2();
     }
-  }, [state.isStandby, state.phase, state.round1.currentQuestionIndex, state.round2.activeClueId]);
+    if (state.isStandby) {
+      stopObstacleSolvedSound();
+    }
+  }, [state.isStandby, state.phase, state.round1.currentQuestionIndex, state.round2.activeClueId, state.round]);
+
+  // Dừng bài solved_bed và keyword solved khi chuyển sang hàng ngang khác hoặc chuyển vòng
+  useEffect(() => {
+    stopSolvedRound2();
+    stopObstacleSolvedSound();
+  }, [state.round2.activeClueId, state.round]);
+
+  // Quản lý phát nhạc Credits ở Round 3 (Tổng kết & Trao giải)
+  useEffect(() => {
+    if (state.round === 3 && !state.isStandby && state.summary?.isCreditsPlaying) {
+      playCreditsSound();
+    } else {
+      stopCreditsSound();
+    }
+  }, [state.round, state.isStandby, state.summary?.isCreditsPlaying]);
 
   return (
     <GameContext.Provider value={{ state, dispatch: rawDispatch }}>

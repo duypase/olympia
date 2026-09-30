@@ -29,6 +29,20 @@ export const INITIAL_TEAMS: Team[] = [
     canGuessObstacle: true,
     color: '#10B981', // Emerald
   },
+  {
+    id: 'team-5',
+    name: 'Đội 5: Bạch Hổ',
+    score: 0,
+    canGuessObstacle: true,
+    color: '#8B5CF6', // Purple
+  },
+  {
+    id: 'team-6',
+    name: 'Đội 6: Huyền Vũ',
+    score: 0,
+    canGuessObstacle: true,
+    color: '#06B6D4', // Cyan
+  },
 ];
 
 export const MOCK_ROUND1_QUESTIONS: Round1Question[] = [
@@ -152,7 +166,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
       question: 'Thời kỳ các vua nào trong truyền thuyết được coi là đã sáng lập nên nhà nước Văn Lang cổ đại?',
       answer: 'HÙNG VƯƠNG',
       isRevealed: false,
-      timeLimit: 15,
+      timeLimit: 20,
     },
     {
       id: 2,
@@ -160,7 +174,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
       question: 'Kim loại chủ đạo được cư dân Việt cổ sử dụng để đúc ra các nhạc khí và vũ khí thời đồ đồng là gì?',
       answer: 'ĐỒNG THAU',
       isRevealed: false,
-      timeLimit: 15,
+      timeLimit: 20,
     },
     {
       id: 3,
@@ -168,7 +182,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
       question: 'Hình tượng loài chim sải cánh bay được khắc họa rất nhiều trên mặt trống đồng cổ đại là chim gì?',
       answer: 'CHIM LẠC',
       isRevealed: false,
-      timeLimit: 15,
+      timeLimit: 20,
     },
     {
       id: 4,
@@ -176,7 +190,23 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
       question: 'Hình tượng ngôi sao nhiều cánh ở chính giữa mặt trống đồng tượng trưng cho điều gì trong tín ngưỡng sơ khai?',
       answer: 'MẶT TRỜI',
       isRevealed: false,
-      timeLimit: 15,
+      timeLimit: 20,
+    },
+    {
+      id: 5,
+      rowLabel: 'Hàng ngang 5 (7 chữ cái)',
+      question: 'Địa danh khảo cổ đầu tiên phát hiện ra loại trống đồng tiêu biểu này thuộc tỉnh Thanh Hóa ngày nay là gì?',
+      answer: 'ĐÔNG SƠN',
+      isRevealed: false,
+      timeLimit: 20,
+    },
+    {
+      id: 6,
+      rowLabel: 'Hàng ngang 6 (6 chữ cái)',
+      question: 'Dòng sông lớn chảy qua vùng đất Đông Sơn, nơi tập trung nhiều di chỉ khảo cổ đồ đồng thời Văn Lang là sông gì?',
+      answer: 'SÔNG MÃ',
+      isRevealed: false,
+      timeLimit: 20,
     },
   ],
 };

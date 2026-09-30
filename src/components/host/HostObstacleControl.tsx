@@ -18,7 +18,6 @@ export const HostObstacleControl: React.FC = () => {
   const { round2, phase, timerSeconds, isTimerRunning, activeTeamId, teams, scoreModifier } = state;
   const { obstacle, activeClueId } = round2;
 
-  const [isPreparing1s, setIsPreparing1s] = useState(false);
   const [isGuessModalOpen, setIsGuessModalOpen] = useState(false);
   const activeClue = obstacle.clues.find((c) => c.id === activeClueId);
   const activeTeam = teams.find((t) => t.id === activeTeamId);
@@ -89,7 +88,7 @@ export const HostObstacleControl: React.FC = () => {
               <button
                 onClick={() => dispatch({ type: 'REVEAL_FULL_OBSTACLE' })}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                title="Lật toàn bộ mảnh ghép khi hết 4 gợi ý"
+                title={`Lật toàn bộ mảnh ghép khi hết ${obstacle.clues.length} gợi ý`}
               >
                 <Unlock className="w-4 h-4 text-amber-400" />
                 <span>MỞ TẤT CẢ MẢNH</span>
@@ -103,14 +102,15 @@ export const HostObstacleControl: React.FC = () => {
         </div>
       </div>
 
-      {/* Danh sách 4 Clues */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Danh sách 6 Clues */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {obstacle.clues.map((clue) => {
           const isSelected = activeClueId === clue.id;
           return (
             <div
               key={clue.id}
               onClick={() => dispatch({ type: 'SELECT_CLUE', clueId: clue.id })}
+              title={isSelected ? 'Bấm để bỏ chọn hàng ngang này' : 'Bấm để chọn hàng ngang'}
               className={`p-4 rounded-xl border transition-all cursor-pointer relative select-none ${
                 isSelected
                   ? 'bg-slate-800 border-amber-400 ring-2 ring-amber-400/40 shadow-lg'
@@ -140,11 +140,15 @@ export const HostObstacleControl: React.FC = () => {
                   </div>
                 </div>
 
-                {clue.isRevealed && (
+                {isSelected ? (
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded border border-amber-400/30 animate-pulse-subtle">
+                    ĐANG CHỌN
+                  </span>
+                ) : clue.isRevealed ? (
                   <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/60">
                     ĐÃ MỞ
                   </span>
-                )}
+                ) : null}
               </div>
 
               <p className="mt-3 text-xs text-slate-300 line-clamp-2">
@@ -163,12 +167,38 @@ export const HostObstacleControl: React.FC = () => {
       {/* Điều khiển Gợi ý đang chọn & Timer */}
       {activeClue && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-              Đang điều khiển: {activeClue.rowLabel}
-            </span>
-            <div className="text-xs text-slate-400">
-              Thời gian: {activeClue.timeLimit}s
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                Đang điều khiển: {activeClue.rowLabel}
+              </span>
+
+              {/* Nút bật/tắt hiển thị câu hỏi lên màn chiếu */}
+              <button
+                onClick={() => dispatch({ type: 'TOGGLE_CLUE_QUESTION' })}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                  round2.isQuestionVisible
+                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-sm'
+                    : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-400 hover:text-slate-200'
+                }`}
+                title={round2.isQuestionVisible ? 'Ẩn câu hỏi trên màn chiếu' : 'Hiện câu hỏi lên màn chiếu'}
+              >
+                {round2.isQuestionVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{round2.isQuestionVisible ? 'ĐANG HIỆN CÂU HỎI' : 'CÂU HỎI ĐANG ẨN'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => dispatch({ type: 'UNSELECT_CLUE' })}
+                className="text-xs text-slate-400 hover:text-rose-400 px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-rose-950/40 border border-slate-700/60 hover:border-rose-500/30 transition-all cursor-pointer font-medium"
+                title="Bỏ chọn hàng ngang này"
+              >
+                Bỏ chọn
+              </button>
+              <div className="text-xs text-slate-400">
+                Thời gian: {activeClue.timeLimit}s
+              </div>
             </div>
           </div>
 
@@ -198,15 +228,34 @@ export const HostObstacleControl: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {!isTimerRunning && !isPreparing1s ? (
+                {/* Nút bật/tắt hiển thị câu hỏi lên màn chiếu */}
+                <button
+                  onClick={() => dispatch({ type: 'TOGGLE_CLUE_QUESTION' })}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    round2.isQuestionVisible
+                      ? 'bg-sky-500/20 border-sky-400 text-sky-300 hover:bg-sky-500/30 shadow-sm'
+                      : 'bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20 border-sky-500'
+                  }`}
+                  title={round2.isQuestionVisible ? 'Ẩn câu hỏi trên màn chiếu' : 'Hiện câu hỏi lên màn chiếu'}
+                >
+                  {round2.isQuestionVisible ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5" />
+                      <span>ẨN CÂU HỎI</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>HIỆN CÂU HỎI</span>
+                    </>
+                  )}
+                </button>
+
+                {!isTimerRunning ? (
                   <button
                     onClick={() => {
                       if (phase === 'IDLE' || phase === 'RESULT_REVEAL') {
-                        setIsPreparing1s(true);
-                        setTimeout(() => {
-                          dispatch({ type: 'START_QUESTION' });
-                          setIsPreparing1s(false);
-                        }, 1000);
+                        dispatch({ type: 'START_QUESTION' });
                       } else {
                         dispatch({ type: 'RESUME_TIMER' });
                       }
@@ -216,10 +265,6 @@ export const HostObstacleControl: React.FC = () => {
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>{phase === 'IDLE' ? 'BẮT ĐẦU ĐẾM' : 'TIẾP TỤC'}</span>
                   </button>
-                ) : isPreparing1s ? (
-                  <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 font-extrabold text-xs border border-amber-500/40">
-                    <span>CHUẨN BỊ...</span>
-                  </div>
                 ) : (
                   <button
                     onClick={() => dispatch({ type: 'PAUSE_TIMER' })}
@@ -242,13 +287,30 @@ export const HostObstacleControl: React.FC = () => {
               </div>
             </div>
 
-            {/* Thao tác mở mảnh ghép & hướng dẫn tính điểm */}
-            <div className="flex items-center gap-3">
+            {/* Thao tác Cue đáp án & Mở mảnh ghép */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Nút CUE ĐÁP ÁN ĐÚNG khi timer đang chạy */}
+              {isTimerRunning && !activeClue.isRevealed && (
+                <button
+                  onClick={() => dispatch({ type: 'CUE_CORRECT_ANSWER', clueId: activeClue.id })}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer animate-pulse-subtle"
+                  title="Thí sinh trả lời đúng: Ẩn timer, fade out nhạc timer và phát nhạc Solved"
+                >
+                  <CheckCircle2 className="w-4 h-4 fill-white/20" />
+                  <span>CUE ĐÁP ÁN ĐÚNG</span>
+                </button>
+              )}
+
+              {/* Nút MỞ MẢNH GHÉP NÀY: Dùng khi hết giờ không ai trả lời được (hoặc mở chủ động) */}
               {!activeClue.isRevealed ? (
                 <button
                   onClick={() => dispatch({ type: 'REVEAL_CLUE_PIECE', clueId: activeClue.id })}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-                  title="Mở mảnh ghép này trên màn hình chiếu"
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-white text-xs font-bold transition-all cursor-pointer ${
+                    isTimerRunning
+                      ? 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300'
+                      : 'bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20'
+                  }`}
+                  title="Mở mảnh ghép này (phát âm thanh mở đáp án khi hết giờ)"
                 >
                   <Unlock className="w-3.5 h-3.5" />
                   <span>MỞ MẢNH GHÉP NÀY</span>

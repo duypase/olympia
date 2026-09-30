@@ -1,15 +1,20 @@
 import React from 'react';
 
 interface PresentationStandbyScreenProps {
-  round: 1 | 2;
+  round: 1 | 2 | 3;
 }
 
 export const PresentationStandbyScreen: React.FC<PresentationStandbyScreenProps> = ({ round }) => {
-  const roundTitle = round === 1 ? 'KHỞI ĐỘNG' : 'VƯỢT CHƯỚNG NGẠI VẬT';
+  const roundTitle =
+    round === 1
+      ? 'KHỞI ĐỘNG'
+      : round === 2
+      ? 'VƯỢT CHƯỚNG NGẠI VẬT'
+      : 'TỔNG KẾT & TRAO GIẢI';
 
   return (
     <div
-      style={{ fontFamily: 'system-ui', fontWeight: 'normal' }}
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 'normal' }}
       className="relative w-full h-full flex flex-col items-center justify-center select-none overflow-hidden"
     >
       {/* Soft Ambient Radial Glow Layers */}
@@ -19,7 +24,9 @@ export const PresentationStandbyScreen: React.FC<PresentationStandbyScreenProps>
           background:
             round === 1
               ? 'radial-gradient(circle, rgba(56,189,248,0.35) 0%, rgba(30,58,138,0.15) 60%, transparent 80%)'
-              : 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(180,83,9,0.15) 60%, transparent 80%)',
+              : round === 2
+              ? 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(180,83,9,0.15) 60%, transparent 80%)'
+              : 'radial-gradient(circle, rgba(234,179,8,0.4) 0%, rgba(168,85,247,0.15) 60%, transparent 80%)',
           animationDuration: '6s',
         }}
       />
