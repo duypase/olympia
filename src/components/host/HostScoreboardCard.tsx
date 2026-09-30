@@ -1,24 +1,22 @@
 import React, { useState } from 'react';
 import type { Team } from '../../types/game';
 import { useGame } from '../../context/useGame';
+import { playCorrect } from '../../utils/audio';
 import { Plus, Minus, Edit2, Check, ShieldAlert } from 'lucide-react';
 
 interface HostScoreboardCardProps {
   team: Team;
-  isSelectedForAnswer: boolean;
-  onSelectAnswer: () => void;
   disabled?: boolean;
 }
 
 export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
   team,
-  isSelectedForAnswer,
-  onSelectAnswer,
   disabled,
 }) => {
   const { dispatch, state } = useGame();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(team.name);
+  const [justAwarded, setJustAwarded] = useState(false);
 
   const handleSaveName = () => {
     if (editName.trim()) {
@@ -32,20 +30,37 @@ export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
     dispatch({ type: 'UPDATE_TEAM_SCORE', teamId: team.id, delta: amount });
   };
 
+  // Double click awards exactly +10 points and pauses timer if running
+  const handleDoubleClick = () => {
+    if (disabled) return;
+    if (state.isTimerRunning) {
+      dispatch({ type: 'PAUSE_TIMER' });
+    }
+    dispatch({ type: 'UPDATE_TEAM_SCORE', teamId: team.id, delta: 10 });
+    playCorrect();
+
+    setJustAwarded(true);
+    setTimeout(() => setJustAwarded(false), 800);
+  };
+
   return (
     <div
-      onClick={() => {
-        if (!disabled && state.phase === 'QUESTION_ACTIVE') {
-          onSelectAnswer();
-        }
-      }}
-      className={`relative p-3.5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
-        isSelectedForAnswer
-          ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/10'
-          : 'bg-slate-900/80 hover:bg-slate-800/80 border-slate-700/80 hover:border-slate-600'
+      onDoubleClick={handleDoubleClick}
+      title="Nhấp đúp (Double-click) để cộng 10 điểm"
+      className={`relative p-3 rounded-xl border transition-all duration-200 cursor-pointer select-none group ${
+        justAwarded
+          ? 'bg-emerald-950/70 border-emerald-400 ring-2 ring-emerald-400/60 shadow-lg shadow-emerald-500/20 scale-[1.02]'
+          : 'bg-slate-900/90 hover:bg-slate-850 border-slate-800 hover:border-slate-700'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      <div className="flex items-start justify-between gap-2">
+      {/* Floating "+10" indicator when double clicked */}
+      {justAwarded && (
+        <div className="absolute -top-3 right-4 px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black text-xs shadow-lg animate-bounce-sm z-20">
+          +10 ĐIỂM!
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div
             className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
@@ -70,7 +85,7 @@ export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="font-semibold text-sm truncate text-slate-200">
+              <span className="font-bold text-sm truncate text-slate-200 group-hover:text-white transition-colors">
                 {team.name}
               </span>
               <button
@@ -78,7 +93,7 @@ export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
                   e.stopPropagation();
                   setIsEditingName(true);
                 }}
-                className="opacity-0 hover:opacity-100 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-slate-200 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-slate-200 transition-opacity"
                 title="Sửa tên đội"
               >
                 <Edit2 className="w-3 h-3" />
@@ -89,7 +104,7 @@ export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
 
         {/* Điểm số */}
         <div className="text-right">
-          <div className="font-display font-extrabold text-xl text-amber-400 tracking-tight">
+          <div className="font-display font-extrabold text-2xl text-amber-400 tracking-tight">
             {team.score}
             <span className="text-xs font-normal text-slate-400 ml-0.5">đ</span>
           </div>
@@ -104,47 +119,27 @@ export const HostScoreboardCard: React.FC<HostScoreboardCardProps> = ({
         </div>
       )}
 
-      {/* Nút thao tác nhanh điểm: +/- */}
-      <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-1">
+      {/* Footer bar of card: Quick buttons */}
+      <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-end text-xs">
+        {/* Nút thao tác nhanh điểm: Chỉ có -10 và +10 */}
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={(e) => handleAddScore(e, -10)}
-            className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition-colors"
+            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-800/50 border border-slate-700/60 text-slate-300 text-[11px] font-bold transition-all cursor-pointer"
             title="Trừ 10 điểm"
           >
-            <Minus className="w-3 h-3" />
-          </button>
-          <button
-            onClick={(e) => handleAddScore(e, 5)}
-            className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition-colors"
-            title="Cộng 5 điểm"
-          >
-            +5
+            <Minus className="w-3 h-3 inline mr-0.5" />
+            10
           </button>
           <button
             onClick={(e) => handleAddScore(e, 10)}
-            className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-medium transition-colors"
+            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-950/60 hover:text-emerald-300 hover:border-emerald-800/50 border border-slate-700/60 text-slate-300 text-[11px] font-bold transition-all cursor-pointer"
             title="Cộng 10 điểm"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3 h-3 inline mr-0.5" />
+            10
           </button>
         </div>
-
-        {/* Nút Chọn giơ tay */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectAnswer();
-          }}
-          disabled={disabled}
-          className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-            isSelectedForAnswer
-              ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30'
-              : 'bg-slate-800 hover:bg-amber-500/20 hover:text-amber-300 text-slate-300 border border-slate-700'
-          }`}
-        >
-          {isSelectedForAnswer ? 'Đang trả lời' : 'Chọn trả lời'}
-        </button>
       </div>
     </div>
   );

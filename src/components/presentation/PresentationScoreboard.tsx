@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGame } from '../../context/useGame';
-import { Trophy, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
 
 export const PresentationScoreboard: React.FC = () => {
   const { state } = useGame();
@@ -39,75 +39,67 @@ export const PresentationScoreboard: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center py-6 px-4 animate-scale-up">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <Trophy className="w-10 h-10 text-amber-400 animate-bounce-sm" />
-        <div className="text-center">
-          <h2 className="font-display font-black text-3xl md:text-5xl text-white tracking-tight">
-            BẢNG XẾP HẠNG
-          </h2>
-          <p className="text-sm font-semibold tracking-widest text-amber-400 uppercase mt-1">
-            ĐƯỜNG LÊN ĐỈNH OLYMPIA
-          </p>
-        </div>
-        <Trophy className="w-10 h-10 text-amber-400 animate-bounce-sm" />
+    <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center py-6 px-4">
+      {/* Header: title only 'BẢNG XẾP HẠNG', trượt waterfall xuống từ trên */}
+      <div className="text-center mb-8 animate-waterfall" style={{ animationDelay: '50ms' }}>
+        <h2 className="font-display font-medium text-3xl md:text-5xl text-white/90 tracking-tight">
+          BẢNG XẾP HẠNG
+        </h2>
       </div>
 
-      {/* Leaderboard Cards */}
+      {/* Leaderboard Cards: mỗi thẻ trượt thác nước so le nhau */}
       <div className="w-full flex flex-col gap-4">
         {sortedTeams.map((team, idx) => {
           const percentage = Math.max(12, Math.min(100, (team.score / maxScore) * 100));
-          const isLeader = idx === 0 && team.score > 0;
+
+          // Card styles matching top 1 with CSS 2 and CSS 9 applied
+          const cardStyle: React.CSSProperties = {
+            borderRadius: '9999px',
+            paddingBottom: '20px',
+            paddingTop: '20px',
+            paddingRight: '20px',
+            height: '80px',
+            animationDelay: `${150 + idx * 100}ms`,
+          };
 
           return (
             <div
               key={team.id}
-              className={`relative overflow-hidden rounded-2xl border transition-all duration-500 ${
-                isLeader
-                  ? 'bg-gradient-to-r from-amber-950/60 via-slate-900/90 to-amber-950/40 border-amber-400 shadow-xl shadow-amber-500/10'
-                  : 'bg-slate-900/80 border-slate-800'
-              }`}
+              style={cardStyle}
+              className="relative overflow-hidden border border-white/20 transition-all duration-500 flex items-center animate-waterfall"
             >
               {/* Dynamic Score Bar in Background */}
               <div
-                className="absolute inset-y-0 left-0 bg-slate-800/40 pointer-events-none transition-all duration-700 ease-out"
+                className="absolute inset-y-0 left-0 bg-slate-800/50 pointer-events-none transition-all duration-700 ease-out"
                 style={{ width: `${percentage}%` }}
               />
 
-              <div className="relative p-4 md:p-5 flex items-center justify-between gap-4">
-                {/* Left: Rank & Team Identity */}
+              <div className="relative w-full px-6 flex items-center justify-between gap-4">
+                {/* Left: Rank & Team Identity (without team color label) */}
                 <div className="flex items-center gap-4">
                   {getRankBadge(idx)}
 
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-4 h-4 rounded-full ring-2 ring-white/20 shrink-0"
-                      style={{ backgroundColor: team.color }}
-                    />
-                    <div>
-                      <h3 className="font-display font-black text-xl md:text-2xl text-white tracking-tight">
-                        {team.name}
-                      </h3>
-                      {state.round === 2 && !team.canGuessObstacle && (
-                        <span className="text-[11px] text-rose-400 font-semibold">
-                          Đã mất quyền đoán CNV
-                        </span>
-                      )}
-                    </div>
+                  <div>
+                    <h3
+                      style={{ fontWeight: 'normal', fontSize: '22px' }}
+                      className="font-display text-white tracking-tight"
+                    >
+                      {team.name}
+                    </h3>
+                    {state.round === 2 && !team.canGuessObstacle && (
+                      <span className="text-[11px] text-rose-400 font-medium">
+                        Đã mất quyền đoán CNV
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Right: Score */}
+                {/* Right: Score (matching top 1 styling) */}
                 <div className="flex items-baseline gap-1">
-                  <span
-                    className={`font-display font-black text-3xl md:text-5xl tracking-tighter ${
-                      isLeader ? 'text-amber-400' : 'text-slate-100'
-                    }`}
-                  >
+                  <span className="font-display font-black text-3xl md:text-5xl tracking-tighter text-amber-400">
                     {team.score}
                   </span>
-                  <span className="text-sm font-bold text-slate-400">ĐIỂM</span>
+                  <span className="text-sm font-bold text-white/60">ĐIỂM</span>
                 </div>
               </div>
             </div>

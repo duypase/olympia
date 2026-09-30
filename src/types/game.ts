@@ -11,6 +11,7 @@ export type Round1Question = {
   question: string;
   options?: string[];
   answer: string;
+  correctOptionIndex?: number;
   timeLimit: number; // in seconds, e.g. 10 or 15
 };
 
@@ -42,16 +43,19 @@ export type GamePhase =
 export type GameState = {
   round: 1 | 2;
   phase: GamePhase;
+  isStandby: boolean; // Trạng thái màn hình chờ (true: hiện màn hình tên vòng thi, false: vào giao diện thi đấu)
   teams: Team[];
   activeTeamId: string | null;
   timerSeconds: number;
   isTimerRunning: boolean;
+  isTimerIntroDelaying?: boolean; // 1 giây intro trễ trước khi timer xuất hiện và bắt đầu đếm ngược
   scoreModifier: number; // Điểm sẽ cộng nếu chọn ĐÚNG (mặc định 10)
   
   // Vòng 1
   round1: {
     currentQuestionIndex: number; // 0..9
     questions: Round1Question[];
+    selectedOptionIndex: number | null;
     lastResult: 'CORRECT' | 'WRONG' | 'TIMEOUT' | 'SKIPPED' | null;
     lastPointsAwarded: number;
   };
@@ -68,11 +72,14 @@ export type GameState = {
 
 export type GameAction =
   | { type: 'SET_ROUND'; round: 1 | 2 }
+  | { type: 'SET_STANDBY'; isStandby: boolean }
   | { type: 'START_QUESTION' }
+  | { type: 'BEGIN_COUNTDOWN' }
   | { type: 'PAUSE_TIMER' }
   | { type: 'RESUME_TIMER' }
   | { type: 'RESET_TIMER'; seconds: number }
   | { type: 'TICK_TIMER' }
+  | { type: 'CHOOSE_OPTION'; optionIndex: number }
   | { type: 'SELECT_TEAM_FOR_ANSWER'; teamId: string }
   | { type: 'SUBMIT_ANSWER'; isCorrect: boolean; pointsOverride?: number }
   | { type: 'SKIP_QUESTION' }

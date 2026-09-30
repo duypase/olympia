@@ -34,44 +34,75 @@ export const INITIAL_TEAMS: Team[] = [
 export const MOCK_ROUND1_QUESTIONS: Round1Question[] = [
   {
     id: 1,
-    question: 'Tỉnh nào ở nước ta có đường bờ biển dài nhất với 385 km?',
-    options: ['Khánh Hòa', 'Quảng Ninh', 'Bình Thuận', 'Cà Mau'],
-    answer: 'Khánh Hòa',
-    timeLimit: 12,
+    question: 'Theo số liệu thống kê địa lý của Tổng cục Khí tượng Thủy văn và Hải văn Quốc gia, tỉnh nào tại Việt Nam sở hữu đường bờ biển khúc khuỷu dài nhất với tổng chiều dài lên tới 385 km?',
+    options: [
+      'Quảng Ninh (với hơn hai ngàn hòn đảo đá vôi và vịnh biển kỳ vĩ)',
+      'Khánh Hòa (sở hữu vịnh Vân Phong, vịnh Nha Trang và vịnh Cam Ranh)',
+      'Bình Thuận (với dải đụn cát ven biển Mũi Né dài hàng chục km)',
+      'Cà Mau (mũi đất cực Nam tiếp giáp cả Biển Đông và Vịnh Thái Lan)',
+    ],
+    answer: 'Khánh Hòa (sở hữu vịnh Vân Phong, vịnh Nha Trang và vịnh Cam Ranh)',
+    correctOptionIndex: 1,
+    timeLimit: 10,
   },
   {
     id: 2,
-    question: 'Hành tinh nào trong Hệ Mặt Trời có thời gian tự quay một vòng quanh trục lâu hơn thời gian quay quanh Mặt Trời?',
-    options: ['Sao Kim', 'Sao Thủy', 'Sao Hỏa', 'Sao Mộc'],
-    answer: 'Sao Kim (Kim tinh)',
-    timeLimit: 12,
+    question: 'Trong hệ Mặt Trời, hành tinh đất đá nào có hiện tượng nghịch lý thiên văn đặc biệt khi thời gian tự quay một vòng quanh trục của nó (243 ngày Trái Đất) dài hơn cả chu kỳ quỹ đạo quay quanh Mặt Trời (225 ngày Trái Đất)?',
+    options: [
+      'Sao Kim (Kim tinh - hành tinh sáng nhất trên bầu trời hoàng hôn)',
+      'Sao Thủy (Thủy tinh - hành tinh nhỏ nhất nằm gần Mặt Trời nhất)',
+      'Sao Hỏa (Hỏa tinh - hành tinh đỏ với đỉnh núi Olympus Mons hùng vĩ)',
+      'Sao Mộc (Mộc tinh - khối khí khổng lồ có Vết Đỏ Lớn tồn tại hàng thế kỷ)',
+    ],
+    answer: 'Sao Kim (Kim tinh - hành tinh sáng nhất trên bầu trời hoàng hôn)',
+    correctOptionIndex: 0,
+    timeLimit: 10,
   },
   {
     id: 3,
-    question: 'Trong tác phẩm "Truyện Kiều" của Nguyễn Du, nàng Kiều mang họ gì?',
-    options: ['Vương', 'Nguyễn', 'Trần', 'Lê'],
-    answer: 'Vương (Vương Thúy Kiều)',
+    question: 'Trong kiệt tác văn học trung đại "Đoạn trường tân thanh" (Truyện Kiều) của Đại thi hào Nguyễn Du, nhân vật Thúy Kiều và Thúy Vân mang họ khai sinh nào trong gia đình viên ngoại họ này?',
+    options: [
+      'Nguyễn (cùng dòng tộc với tác giả Nguyễn Du và Nguyễn Khuyến)',
+      'Trần (dòng họ hoàng tộc triều Trần với hào khí Đông A oanh liệt)',
+      'Lê (triều đại phong kiến kéo dài thịnh trị bậc nhất lịch sử Đại Việt)',
+      'Vương (gia đình trung lưu viên ngoại Vương ông, Vương bà và Vương Quan)',
+    ],
+    answer: 'Vương (gia đình trung lưu viên ngoại Vương ông, Vương bà và Vương Quan)',
+    correctOptionIndex: 3,
     timeLimit: 10,
   },
   {
     id: 4,
     question: 'Nguyên tố hóa học nào có ký hiệu là "W" trong bảng tuần hoàn Mendeleev?',
-    options: ['Wolfram (Tungsten)', 'Vàng', 'Bạch kim', 'Chì'],
-    answer: 'Wolfram (Tungsten)',
-    timeLimit: 12,
+    options: [
+      'Kim loại Vàng (ký hiệu nguyên tố hóa học Au - Aurum)',
+      'Bạch kim hay Platinum (ký hiệu nguyên tố hóa học Pt)',
+      'Wolfram hay Tungsten (kim loại có nhiệt độ nóng chảy cao nhất tới 3.422 °C)',
+      'Chì kim loại nặng màu xám (ký hiệu nguyên tố hóa học Pb - Plumbum)',
+    ],
+    answer: 'Wolfram hay Tungsten (kim loại có nhiệt độ nóng chảy cao nhất tới 3.422 °C)',
+    correctOptionIndex: 2,
+    timeLimit: 10,
   },
   {
     id: 5,
-    question: 'Vịnh biển nào của Việt Nam được UNESCO hai lần công nhận là Di sản Thiên nhiên Thế giới (1994 và 2000)?',
-    options: ['Vịnh Hạ Long', 'Vịnh Nha Trang', 'Vịnh Lăng Cô', 'Vịnh Xuân Đài'],
-    answer: 'Vịnh Hạ Long',
+    question: 'Khu vực vịnh biển nào của Việt Nam với hàng ngàn đảo đá vôi kỳ vĩ đã vinh dự được tổ chức UNESCO hai lần công nhận là Di sản Thiên nhiên Thế giới về giá trị thẩm mỹ và giá trị địa chất - địa mạo vào các năm 1994 và 2000?',
+    options: [
+      'Vịnh Hạ Long (thuộc tỉnh Quảng Ninh, kỳ quan thiên nhiên thế giới nổi tiếng)',
+      'Vịnh Nha Trang (một trong những vịnh biển nhiệt đới đẹp nhất thế giới)',
+      'Vịnh Lăng Cô (vịnh biển thơ mộng nằm dưới chân đèo Hải Vân tỉnh Thừa Thiên Huế)',
+      'Vịnh Xuân Đài (vịnh biển hoang sơ tuyệt đẹp thuộc địa phận tỉnh Phú Yên)',
+    ],
+    answer: 'Vịnh Hạ Long (thuộc tỉnh Quảng Ninh, kỳ quan thiên nhiên thế giới nổi tiếng)',
+    correctOptionIndex: 0,
     timeLimit: 10,
   },
   {
     id: 6,
     question: 'Cầu thủ bóng đá nào là người đầu tiên và duy nhất trong lịch sử từng 3 lần vô địch World Cup?',
-    options: ['Pelé', 'Diego Maradona', 'Lionel Messi', 'Zinedine Zidane'],
+    options: ['Diego Maradona', 'Pelé', 'Lionel Messi', 'Zinedine Zidane'],
     answer: 'Pelé',
+    correctOptionIndex: 1,
     timeLimit: 10,
   },
   {
@@ -79,28 +110,32 @@ export const MOCK_ROUND1_QUESTIONS: Round1Question[] = [
     question: 'Loại hạt cơ bản nào mang điện tích âm và quay xung quanh hạt nhân nguyên tử?',
     options: ['Electron', 'Proton', 'Neutron', 'Positron'],
     answer: 'Electron',
+    correctOptionIndex: 0,
     timeLimit: 10,
   },
   {
     id: 8,
     question: 'Trận đánh nào được coi là đỉnh cao của Chiến dịch Hồ Chí Minh lịch sử, giải phóng hoàn toàn miền Nam năm 1975?',
-    options: ['Tiến công Dinh Độc Lập', 'Chiến dịch Tây Nguyên', 'Chiến dịch Huế - Đà Nẵng', 'Trận Xuân Lộc'],
+    options: ['Chiến dịch Tây Nguyên', 'Chiến dịch Huế - Đà Nẵng', 'Tiến công Dinh Độc Lập', 'Trận Xuân Lộc'],
     answer: 'Tiến công Dinh Độc Lập (30/4/1975)',
-    timeLimit: 12,
+    correctOptionIndex: 2,
+    timeLimit: 10,
   },
   {
     id: 9,
     question: 'Tập hợp các số nguyên trong toán học thường được ký hiệu bằng chữ cái in hoa nào?',
     options: ['Z', 'N', 'R', 'Q'],
     answer: 'Z',
+    correctOptionIndex: 0,
     timeLimit: 10,
   },
   {
     id: 10,
     question: 'Đỉnh núi Fansipan – nóc nhà của Đông Dương thuộc dãy núi nào ở Việt Nam?',
-    options: ['Hoàng Liên Sơn', 'Trường Sơn Bắc', 'Trường Sơn Nam', 'Bạch Mã'],
+    options: ['Trường Sơn Bắc', 'Hoàng Liên Sơn', 'Trường Sơn Nam', 'Bạch Mã'],
     answer: 'Hoàng Liên Sơn',
-    timeLimit: 12,
+    correctOptionIndex: 1,
+    timeLimit: 10,
   },
 ];
 
@@ -113,7 +148,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
   clues: [
     {
       id: 1,
-      rowLabel: 'Gợi ý 1 (Hàng ngang 1 - 7 chữ cái)',
+      rowLabel: 'Hàng ngang 1 (9 chữ cái)',
       question: 'Thời kỳ các vua nào trong truyền thuyết được coi là đã sáng lập nên nhà nước Văn Lang cổ đại?',
       answer: 'HÙNG VƯƠNG',
       isRevealed: false,
@@ -121,7 +156,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
     },
     {
       id: 2,
-      rowLabel: 'Gợi ý 2 (Hàng ngang 2 - 8 chữ cái)',
+      rowLabel: 'Hàng ngang 2 (8 chữ cái)',
       question: 'Kim loại chủ đạo được cư dân Việt cổ sử dụng để đúc ra các nhạc khí và vũ khí thời đồ đồng là gì?',
       answer: 'ĐỒNG THAU',
       isRevealed: false,
@@ -129,7 +164,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
     },
     {
       id: 3,
-      rowLabel: 'Gợi ý 3 (Hàng ngang 3 - 6 chữ cái)',
+      rowLabel: 'Hàng ngang 3 (7 chữ cái)',
       question: 'Hình tượng loài chim sải cánh bay được khắc họa rất nhiều trên mặt trống đồng cổ đại là chim gì?',
       answer: 'CHIM LẠC',
       isRevealed: false,
@@ -137,7 +172,7 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
     },
     {
       id: 4,
-      rowLabel: 'Gợi ý 4 (Hàng ngang 4 - 8 chữ cái)',
+      rowLabel: 'Hàng ngang 4 (7 chữ cái)',
       question: 'Hình tượng ngôi sao nhiều cánh ở chính giữa mặt trống đồng tượng trưng cho điều gì trong tín ngưỡng sơ khai?',
       answer: 'MẶT TRỜI',
       isRevealed: false,
@@ -145,3 +180,25 @@ export const MOCK_OBSTACLE_DATA: ObstacleData = {
     },
   ],
 };
+
+export function getCorrectOptionIndex(q?: Partial<Round1Question> | null): number {
+  if (!q) return 0;
+  if (typeof q.correctOptionIndex === 'number' && q.correctOptionIndex >= 0) {
+    return q.correctOptionIndex;
+  }
+  // Lookup in MOCK_ROUND1_QUESTIONS by ID
+  const mockQ = MOCK_ROUND1_QUESTIONS.find(m => m.id === q.id);
+  if (mockQ && typeof mockQ.correctOptionIndex === 'number') {
+    return mockQ.correctOptionIndex;
+  }
+  // Lookup by matching answer string in options
+  if (q.options && q.answer) {
+    const cleanAnswer = q.answer.toLowerCase();
+    const idx = q.options.findIndex(opt => {
+      const cleanOpt = opt.toLowerCase();
+      return cleanAnswer.includes(cleanOpt) || cleanOpt.includes(cleanAnswer);
+    });
+    if (idx !== -1) return idx;
+  }
+  return 0;
+}

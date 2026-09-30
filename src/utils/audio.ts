@@ -17,59 +17,92 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+export function unlockAudioContext() {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+  const audio = getTimerAudio();
+  if (audio) {
+    audio.load();
+  }
+}
+
+function isPresentationEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('view') === 'presentation';
+}
+
 export function setMuted(muted: boolean) {
   isSoundMuted = muted;
+  if (muted && countdownAudio) {
+    countdownAudio.pause();
+  }
 }
 
 export function isMuted(): boolean {
+  if (!isPresentationEnvironment()) return true;
   return isSoundMuted;
 }
 
+let countdownAudio: HTMLAudioElement | null = null;
+
+export function getTimerAudio(): HTMLAudioElement | null {
+  if (typeof window === 'undefined') return null;
+  if (!countdownAudio) {
+    countdownAudio = new Audio('/timer_soundtrack.wav');
+    countdownAudio.preload = 'auto';
+  }
+  return countdownAudio;
+}
+
+export function startTimerSoundtrack() {
+  if (!isPresentationEnvironment() || isSoundMuted || typeof window === 'undefined') return;
+  const audio = getTimerAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {
+    // Autoplay policy fallback: resume Web Audio if needed
+    getAudioContext();
+  });
+}
+
+export function pauseTimerSoundtrack() {
+  if (countdownAudio && !countdownAudio.paused) {
+    countdownAudio.pause();
+  }
+}
+
+export function resumeTimerSoundtrack() {
+  if (!isPresentationEnvironment() || isSoundMuted || !countdownAudio) return;
+  if (countdownAudio.paused && !countdownAudio.ended) {
+    countdownAudio.play().catch(() => {});
+  }
+}
+
+export function stopTimerSoundtrack() {
+  if (countdownAudio) {
+    countdownAudio.pause();
+    countdownAudio.currentTime = 0;
+  }
+}
+
+export function isSoundtrackPlaying(): boolean {
+  return !!countdownAudio && !countdownAudio.paused && !countdownAudio.ended;
+}
+
 export function playTick() {
-  if (isSoundMuted) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(800, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
-
-  gain.gain.setValueAtTime(0.15, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.05);
+  // Replaced by high-fidelity continuous timer soundtrack!
+  // Left as no-op to prevent double ticking sound.
 }
 
 export function playWarning() {
-  if (isSoundMuted) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(950, ctx.currentTime);
-
-  gain.gain.setValueAtTime(0.25, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.12);
+  // Integrated directly into the timer soundtrack's final urgency crescendo!
 }
 
 export function playCorrect() {
-  if (isSoundMuted) return;
+  if (!isPresentationEnvironment() || isSoundMuted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -95,7 +128,7 @@ export function playCorrect() {
 }
 
 export function playWrong() {
-  if (isSoundMuted) return;
+  if (!isPresentationEnvironment() || isSoundMuted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -118,7 +151,7 @@ export function playWrong() {
 }
 
 export function playVictory() {
-  if (isSoundMuted) return;
+  if (!isPresentationEnvironment() || isSoundMuted) return;
   const ctx = getAudioContext();
   if (!ctx) return;
 

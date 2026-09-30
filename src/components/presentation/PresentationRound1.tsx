@@ -1,14 +1,15 @@
 import React, { useEffect } from 'react';
 import { useGame } from '../../context/useGame';
 import { PresentationTimer } from './PresentationTimer';
+import { getCorrectOptionIndex } from '../../data/mockQuestions';
 import confetti from 'canvas-confetti';
-import { CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 export const PresentationRound1: React.FC = () => {
   const { state } = useGame();
-  const { round1, phase, timerSeconds, isTimerRunning, activeTeamId, teams } = state;
+  const { round1, phase, timerSeconds, isTimerRunning } = state;
   const currentQ = round1.questions[round1.currentQuestionIndex];
-  const activeTeam = teams.find((t) => t.id === activeTeamId);
+  const correctOptionIndex = getCorrectOptionIndex(currentQ);
 
   // Trigger confetti on correct answer
   useEffect(() => {
@@ -23,124 +24,155 @@ export const PresentationRound1: React.FC = () => {
   }, [phase, round1.lastResult]);
 
   return (
-    <div className="w-full h-full max-w-6xl mx-auto flex flex-col justify-between py-6 px-6 relative select-none">
+    <div
+      style={{ fontFamily: 'system-ui', fontWeight: 'normal' }}
+      className="w-full h-full max-w-6xl mx-auto flex flex-col justify-between py-6 px-6 relative select-none"
+    >
       {/* Top Banner: Round Name & Question Indicator */}
       <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
-          <span className="font-display font-black text-xl md:text-2xl tracking-widest text-amber-400 uppercase">
+          <span
+            style={{
+              color: '#ffffff',
+              fontFamily: 'system-ui',
+              fontWeight: 'normal',
+              fontSize: '16px',
+            }}
+            className="tracking-widest uppercase"
+          >
             VÒNG 1: KHỞI ĐỘNG
           </span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-700/80 px-4 py-1.5 rounded-full font-display font-black text-lg md:text-xl text-white tracking-wide shadow-md">
+        <div
+          style={{ fontWeight: 'normal', fontSize: '16px' }}
+          className="bg-slate-900 border border-slate-700/80 px-4 py-1.5 rounded-full font-display text-white tracking-wide shadow-md"
+        >
           CÂU {round1.currentQuestionIndex + 1} / {round1.questions.length}
         </div>
       </div>
 
-      {/* Center Zone: Question & Big Timer */}
-      <div className="my-auto flex flex-col items-center justify-center gap-8 text-center py-4">
-        {/* Timer Component */}
-        <PresentationTimer
-          seconds={timerSeconds}
-          totalSeconds={currentQ?.timeLimit || 12}
-          isRunning={isTimerRunning}
-        />
+      {/* Center Zone: Question & Big Timer with Waterfall Entrance on question change */}
+      <div
+        key={`q-${round1.currentQuestionIndex}`}
+        className="my-auto flex flex-col items-center justify-center gap-5 md:gap-6 text-center py-2 w-full"
+      >
+        {/* Timer Component - Hiển thị ngay lập tức khi bắt đầu câu hỏi */}
+        {phase !== 'IDLE' && (
+          <div
+            style={{ minHeight: '140px' }}
+            className="flex items-center justify-center transition-all duration-500"
+          >
+            <div
+              className="animate-waterfall"
+              style={{ animationDelay: '0ms' }}
+            >
+              <PresentationTimer
+                seconds={timerSeconds}
+                totalSeconds={currentQ?.timeLimit || 10}
+                isRunning={isTimerRunning}
+              />
+            </div>
+          </div>
+        )}
 
-        {/* Big Question Typography */}
-        <div className="max-w-4xl">
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl text-white tracking-tight leading-snug drop-shadow-md">
+        {/* Big Question Typography - Waterfall entrance with responsive sizing for long text */}
+        <div
+          className="max-w-4xl px-2 animate-waterfall"
+          style={{ animationDelay: '120ms' }}
+        >
+          <h2
+            style={{ fontWeight: 'normal' }}
+            className={`font-display text-white tracking-tight leading-snug drop-shadow-md transition-all ${
+              (currentQ?.question.length || 0) > 130
+                ? 'text-2xl sm:text-3xl md:text-4xl'
+                : (currentQ?.question.length || 0) > 80
+                ? 'text-3xl sm:text-3xl md:text-4xl'
+                : 'text-3xl sm:text-4xl md:text-5xl'
+            }`}
+          >
             {currentQ?.question}
           </h2>
         </div>
 
-        {/* Options (if available) */}
+        {/* Options (with direct highlight for correct/wrong answers & waterfall cascade entrance) */}
         {currentQ?.options && currentQ.options.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-3xl mt-2">
-            {currentQ.options.map((opt, i) => (
-              <div
-                key={i}
-                className="bg-slate-900/90 border border-slate-700/60 rounded-2xl px-5 py-3.5 text-left text-lg md:text-xl text-slate-200 font-semibold flex items-center gap-3.5 shadow-md"
-              >
-                <span className="w-8 h-8 rounded-xl bg-amber-400 text-black font-display font-black text-sm flex items-center justify-center shrink-0 shadow">
-                  {String.fromCharCode(65 + i)}
-                </span>
-                <span className="truncate">{opt}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-4xl mt-2 items-stretch">
+            {currentQ.options.map((opt, i) => {
+              const isSelected = round1.selectedOptionIndex === i;
+              const isCorrectOption = i === correctOptionIndex;
+              const hasResult = round1.selectedOptionIndex !== null;
 
-      {/* Dynamic Status Banner at Bottom */}
-      <div className="w-full flex justify-center pb-2">
-        {/* Phase: Team Answering */}
-        {phase === 'TEAM_ANSWERING' && activeTeam && (
-          <div
-            className="flex items-center gap-4 px-8 py-4 rounded-2xl bg-slate-900/95 border-2 shadow-2xl animate-pulse-subtle"
-            style={{ borderColor: activeTeam.color }}
-          >
-            <div
-              className="w-5 h-5 rounded-full animate-ping"
-              style={{ backgroundColor: activeTeam.color }}
-            />
-            <span className="font-display font-black text-2xl md:text-3xl text-white tracking-wide">
-              {activeTeam.name.toUpperCase()} ĐANG TRẢ LỜI
-            </span>
-          </div>
-        )}
+              let optionStyle = 'bg-slate-900/90 border-slate-700/60 text-slate-200';
+              let badgeStyle = 'bg-slate-800 text-amber-400';
+              let statusIcon: React.ReactNode = null;
 
-        {/* Phase: Result Reveal */}
-        {phase === 'RESULT_REVEAL' && (
-          <div className="animate-scale-up">
-            {round1.lastResult === 'CORRECT' && (
-              <div className="flex items-center gap-3.5 px-8 py-4 rounded-2xl bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 shadow-2xl shadow-emerald-500/20">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" />
-                <span className="font-display font-black text-2xl md:text-4xl text-white tracking-wide">
-                  ✓ CHÍNH XÁC +{round1.lastPointsAwarded}
-                </span>
-              </div>
-            )}
+              if (hasResult) {
+                if (isSelected && isCorrectOption) {
+                  // Đáp án được chọn và ĐÚNG: Nổi bật màu xanh lá
+                  optionStyle = 'bg-emerald-600 border-emerald-400 text-white shadow-xl shadow-emerald-500/30 scale-[1.02] ring-2 ring-emerald-300';
+                  badgeStyle = 'bg-white text-emerald-800 font-black';
+                  statusIcon = <CheckCircle2 className="w-7 h-7 text-white shrink-0 ml-auto mt-0.5 animate-bounce-sm" />;
+                } else if (isSelected && !isCorrectOption) {
+                  // Đáp án được chọn và SAI: Nổi bật màu đỏ
+                  optionStyle = 'bg-rose-600 border-rose-400 text-white shadow-xl shadow-rose-500/30 scale-[1.02] ring-2 ring-rose-300';
+                  badgeStyle = 'bg-white text-rose-800 font-black';
+                  statusIcon = <XCircle className="w-7 h-7 text-white shrink-0 ml-auto mt-0.5" />;
+                } else if (isCorrectOption) {
+                  // Khi chọn sai: TỰ ĐỘNG HIGHLIGHT LUÔN ĐÁP ÁN ĐÚNG màu xanh lá
+                  optionStyle = 'bg-emerald-600/90 border-emerald-400 text-white shadow-lg ring-2 ring-emerald-400 animate-pulse-subtle';
+                  badgeStyle = 'bg-emerald-400 text-black font-black';
+                  statusIcon = <CheckCircle2 className="w-7 h-7 text-emerald-100 shrink-0 ml-auto mt-0.5" />;
+                } else {
+                  // Các đáp án khác bị làm mờ
+                  optionStyle = 'bg-slate-900/40 border-slate-800/40 text-slate-500 opacity-30';
+                  badgeStyle = 'bg-slate-900 text-slate-600';
+                }
+              }
 
-            {round1.lastResult === 'WRONG' && (
-              <div className="flex items-center gap-3.5 px-8 py-4 rounded-2xl bg-rose-950/90 border-2 border-rose-500 text-rose-300 shadow-2xl shadow-rose-500/20">
-                <XCircle className="w-8 h-8 text-rose-400 shrink-0" />
-                <span className="font-display font-black text-2xl md:text-4xl text-white tracking-wide">
-                  × KHÔNG CHÍNH XÁC
-                </span>
-              </div>
-            )}
+              // Custom option pill styling: smooth rounded corners that fit both 1-line and multi-line perfectly
+              const optionPillStyle: React.CSSProperties = {
+                borderRadius: '1.25rem',
+                animationDelay: `${200 + i * 90}ms`
+              };
 
-            {round1.lastResult === 'TIMEOUT' && (
-              <div className="flex items-center gap-3.5 px-8 py-4 rounded-2xl bg-slate-900/90 border-2 border-amber-500 text-amber-300 shadow-2xl">
-                <Clock className="w-8 h-8 text-amber-400 shrink-0" />
-                <span className="font-display font-black text-xl md:text-3xl text-white tracking-wide">
-                  HẾT GIỜ / KHÔNG CÓ CÂU TRẢ LỜI
-                </span>
-              </div>
-            )}
+              // Custom badge styles for options 1, 2, 3, 4
+              const badgeLetterStyle: React.CSSProperties = {
+                fontWeight: 'bold',
+                fontSize: '18px',
+                borderRadius: '9999px',
+                ...(i === 2 ? { lineHeight: '24px' } : {}),
+              };
 
-            {round1.lastResult === 'SKIPPED' && (
-              <div className="flex items-center gap-3.5 px-8 py-4 rounded-2xl bg-slate-900/90 border-2 border-slate-600 text-slate-400 shadow-xl">
-                <span className="font-display font-black text-xl md:text-2xl text-slate-200">
-                  BỎ QUA CÂU HỎI
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+              // Custom text styles for options 1, 2, 3, 4
+              const optionTextStyle: React.CSSProperties = {
+                fontWeight: 'normal',
+                ...(i === 2 ? { fontSize: '18px' } : {}),
+              };
 
-        {/* Phase: Question Active (Ready for buzzer/hand-raise) */}
-        {phase === 'QUESTION_ACTIVE' && (
-          <div className="text-sm font-semibold tracking-wider text-slate-400 uppercase bg-slate-900/80 px-6 py-2 rounded-full border border-slate-800">
-            CÁC ĐỘI GIƠ TAY ĐỂ GIÀNH QUYỀN TRẢ LỜI
-          </div>
-        )}
-
-        {/* Phase: Idle */}
-        {phase === 'IDLE' && (
-          <div className="text-sm font-semibold tracking-wider text-amber-400/80 uppercase bg-slate-900/80 px-6 py-2 rounded-full border border-slate-800">
-            CHỜ HOST PHÁT LỆNH BẮT ĐẦU CÂU HỎI...
+              return (
+                <div
+                  key={i}
+                  style={optionPillStyle}
+                  className={`animate-waterfall px-5 py-4 text-left text-base md:text-lg lg:text-xl font-bold flex items-start gap-4 transition-all duration-300 border ${optionStyle}`}
+                >
+                  <span
+                    style={badgeLetterStyle}
+                    className={`w-9 h-9 flex items-center justify-center shrink-0 mt-0.5 shadow ${badgeStyle}`}
+                  >
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span
+                    style={optionTextStyle}
+                    className="flex-1 break-words leading-relaxed"
+                  >
+                    {opt}
+                  </span>
+                  {statusIcon}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

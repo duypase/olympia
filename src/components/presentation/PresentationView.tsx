@@ -3,13 +3,29 @@ import { useGame } from '../../context/useGame';
 import { PresentationRound1 } from './PresentationRound1';
 import { PresentationObstacleBoard } from './PresentationObstacleBoard';
 import { PresentationScoreboard } from './PresentationScoreboard';
+import { PresentationStandbyScreen } from './PresentationStandbyScreen';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import { unlockAudioContext } from '../../utils/audio';
 
 export const PresentationView: React.FC = () => {
   const { state } = useGame();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Unlock audio on initial user interaction on the presentation screen
+  React.useEffect(() => {
+    const handleUserGesture = () => {
+      unlockAudioContext();
+    };
+    window.addEventListener('click', handleUserGesture, { once: true });
+    window.addEventListener('keydown', handleUserGesture, { once: true });
+    return () => {
+      window.removeEventListener('click', handleUserGesture);
+      window.removeEventListener('keydown', handleUserGesture);
+    };
+  }, []);
+
   const toggleFullscreen = () => {
+    unlockAudioContext();
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
@@ -40,23 +56,14 @@ export const PresentationView: React.FC = () => {
       <main className="flex-1 w-full h-full flex items-center justify-center relative z-10">
         {state.phase === 'SHOWING_SCOREBOARD' ? (
           <PresentationScoreboard />
+        ) : state.isStandby ? (
+          <PresentationStandbyScreen round={state.round} />
         ) : state.round === 1 ? (
           <PresentationRound1 />
         ) : (
           <PresentationObstacleBoard />
         )}
       </main>
-
-      {/* Minimal Footer Live Indicator */}
-      <footer className="relative z-10 px-6 py-2 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-900">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-bold tracking-widest uppercase">LIVE BROADCAST</span>
-        </div>
-        <div className="tracking-widest font-mono text-slate-600">
-          OLYMPIA × HQ TRIVIA ENGINE
-        </div>
-      </footer>
     </div>
   );
 };

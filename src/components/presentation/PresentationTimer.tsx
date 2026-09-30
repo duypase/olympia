@@ -28,17 +28,22 @@ export const PresentationTimer: React.FC<PresentationTimerProps> = ({
       <div className="relative flex items-center justify-center">
         {/* Glow backdrop for high tension */}
         <div
-          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-300 pointer-events-none ${
-            isUrgent
+          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-300 pointer-events-none ${isUrgent
               ? 'bg-rose-500/40 animate-pulse-intense'
               : isRunning
-              ? 'bg-amber-400/20'
-              : 'bg-transparent'
-          }`}
+                ? 'bg-amber-400/20'
+                : 'bg-transparent'
+            }`}
         />
 
-        {/* SVG Circular Countdown */}
-        <svg className="w-36 h-36 md:w-44 md:h-44 -rotate-90 transform" viewBox="0 0 128 128">
+        {/* SVG Circular Countdown - Ẩn hoàn toàn bằng opacity-0 khi hết giờ */}
+        <svg
+          style={{ width: '140px', height: '140px' }}
+          className={`-rotate-90 transform transition-all duration-500 ${
+            isExpired ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+          }`}
+          viewBox="0 0 128 128"
+        >
           {/* Background circle track */}
           <circle
             cx="64"
@@ -49,7 +54,7 @@ export const PresentationTimer: React.FC<PresentationTimerProps> = ({
             className="text-slate-800/80 fill-slate-950/90"
           />
 
-          {/* Animated progress circle */}
+          {/* Animated progress circle with ultra smooth 1s continuous linear transition */}
           <circle
             cx="64"
             cy="64"
@@ -59,32 +64,61 @@ export const PresentationTimer: React.FC<PresentationTimerProps> = ({
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            className={`transition-all duration-300 fill-transparent ${
-              isUrgent
+            style={{
+              transition: isRunning
+                ? 'stroke-dashoffset 1s linear, stroke 0.3s ease'
+                : 'stroke-dashoffset 0.3s ease-out, stroke 0.3s ease',
+            }}
+            className={`fill-transparent ${isUrgent
                 ? 'text-rose-500'
                 : isExpired
-                ? 'text-slate-700'
-                : 'text-amber-400'
-            }`}
+                  ? 'text-slate-700'
+                  : 'text-amber-400'
+              }`}
           />
         </svg>
 
-        {/* Big Digit in Center */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span
-            className={`font-display font-black text-5xl md:text-6xl tracking-tighter leading-none ${
-              isUrgent
-                ? 'text-rose-400 animate-pulse-intense'
-                : isExpired
-                ? 'text-slate-600'
-                : 'text-white'
-            }`}
-          >
-            {seconds}
-          </span>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">
-            GIÂY
-          </span>
+        {/* Big Digit or HẾT GIỜ Badge in Center (Badge xuất hiện sau 500ms delay bằng CSS) */}
+        <div
+          style={{ width: '140px', height: '140px' }}
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+        >
+          {isExpired ? (
+            <div className="flex flex-col items-center justify-center animate-fade-in-delayed">
+              <span
+                style={{
+                  fontFamily: 'system-ui',
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  color: 'black',
+                }}
+                className="px-5 py-3 rounded-full bg-amber-400 text-white shadow-lg border border-white/20 animate-pulse-subtle uppercase"
+              >
+                HẾT GIỜ
+              </span>
+            </div>
+          ) : (
+            <span
+              style={{
+                fontStyle: 'normal',
+                fontWeight: 'normal',
+                textDecorationLine: 'none',
+                fontFamily: 'system-ui',
+                textAlign: 'center',
+                width: '110px',
+                height: '60px',
+                lineHeight: '54px',
+                fontVariantNumeric: 'tabular-nums',
+                fontSize: '60px',
+              }}
+              className={`tracking-tighter ${isUrgent
+                  ? 'text-rose-400 animate-pulse-intense'
+                  : 'text-white'
+                }`}
+            >
+              {seconds}
+            </span>
+          )}
         </div>
       </div>
     </div>

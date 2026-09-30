@@ -18,6 +18,7 @@ export const HostObstacleControl: React.FC = () => {
   const { round2, phase, timerSeconds, isTimerRunning, activeTeamId, teams, scoreModifier } = state;
   const { obstacle, activeClueId } = round2;
 
+  const [isPreparing1s, setIsPreparing1s] = useState(false);
   const [isGuessModalOpen, setIsGuessModalOpen] = useState(false);
   const activeClue = obstacle.clues.find((c) => c.id === activeClueId);
   const activeTeam = teams.find((t) => t.id === activeTeamId);
@@ -179,21 +180,33 @@ export const HostObstacleControl: React.FC = () => {
             {/* Timer Controller */}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div
-                className={`w-14 h-14 rounded-xl flex items-center justify-center font-display font-black text-2xl border ${
+                className={`w-14 h-14 rounded-xl flex items-center justify-center font-display font-black text-2xl border transition-all ${
                   timerSeconds <= 3 && timerSeconds > 0
                     ? 'bg-rose-950/60 border-rose-500 text-rose-400 animate-pulse-intense'
+                    : timerSeconds === 0
+                    ? 'bg-rose-950/40 border-rose-600/60 text-rose-400'
                     : 'bg-slate-950 border-amber-500/40 text-amber-400'
                 }`}
               >
-                {timerSeconds}
+                {timerSeconds === 0 ? (
+                  <span className="text-[9px] font-black uppercase text-rose-300 text-center leading-tight">
+                    HẾT<br/>GIỜ
+                  </span>
+                ) : (
+                  timerSeconds
+                )}
               </div>
 
               <div className="flex items-center gap-2">
-                {!isTimerRunning ? (
+                {!isTimerRunning && !isPreparing1s ? (
                   <button
                     onClick={() => {
-                      if (phase === 'IDLE') {
-                        dispatch({ type: 'START_QUESTION' });
+                      if (phase === 'IDLE' || phase === 'RESULT_REVEAL') {
+                        setIsPreparing1s(true);
+                        setTimeout(() => {
+                          dispatch({ type: 'START_QUESTION' });
+                          setIsPreparing1s(false);
+                        }, 1000);
                       } else {
                         dispatch({ type: 'RESUME_TIMER' });
                       }
@@ -203,6 +216,10 @@ export const HostObstacleControl: React.FC = () => {
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>{phase === 'IDLE' ? 'BẮT ĐẦU ĐẾM' : 'TIẾP TỤC'}</span>
                   </button>
+                ) : isPreparing1s ? (
+                  <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 font-extrabold text-xs border border-amber-500/40">
+                    <span>CHUẨN BỊ...</span>
+                  </div>
                 ) : (
                   <button
                     onClick={() => dispatch({ type: 'PAUSE_TIMER' })}
@@ -225,38 +242,26 @@ export const HostObstacleControl: React.FC = () => {
               </div>
             </div>
 
-            {/* Đội đang trả lời câu gợi ý */}
-            {activeTeam && phase === 'TEAM_ANSWERING' ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-200">
-                  {activeTeam.name}:
-                </span>
+            {/* Thao tác mở mảnh ghép & hướng dẫn tính điểm */}
+            <div className="flex items-center gap-3">
+              {!activeClue.isRevealed ? (
                 <button
-                  onClick={() => dispatch({ type: 'SUBMIT_ANSWER', isCorrect: false })}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer"
+                  onClick={() => dispatch({ type: 'REVEAL_CLUE_PIECE', clueId: activeClue.id })}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                  title="Mở mảnh ghép này trên màn hình chiếu"
                 >
-                  <XCircle className="w-4 h-4" />
-                  <span>Sai (0đ)</span>
+                  <Unlock className="w-3.5 h-3.5" />
+                  <span>MỞ MẢNH GHÉP NÀY</span>
                 </button>
-                <button
-                  onClick={() =>
-                    dispatch({
-                      type: 'SUBMIT_ANSWER',
-                      isCorrect: true,
-                      pointsOverride: 10,
-                    })
-                  }
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black cursor-pointer shadow-md"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Đúng (+10 & Mở mảnh)</span>
-                </button>
-              </div>
-            ) : (
-              <div className="text-xs text-slate-400">
-                Nhấp vào đội giơ tay ở bảng dưới để trao quyền trả lời gợi ý.
-              </div>
-            )}
+              ) : (
+                <div className="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-3 py-1.5 rounded-xl border border-emerald-800/60">
+                  ✓ Mảnh ghép đã được mở
+                </div>
+              )}
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                • Double-click thẻ đội ở cột bên trái để +10đ
+              </span>
+            </div>
           </div>
         </div>
       )}
