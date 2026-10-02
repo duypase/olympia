@@ -21,6 +21,7 @@ import {
   stopObstacleSolvedSound,
   playCreditsSound,
   stopCreditsSound,
+  stopGameIntroSound,
 } from '../utils/audio';
 import {
   broadcastGameState,
@@ -29,9 +30,9 @@ import {
 } from '../utils/syncBridge';
 
 const INITIAL_STATE: GameState = {
-  round: 1,
+  round: 0,
   phase: 'IDLE',
-  isStandby: true, // Mặc định mở dự án ở màn hình chờ
+  isStandby: false, // Mặc định mở dự án ở màn hình Khai mạc / Intro
   teams: INITIAL_TEAMS,
   activeTeamId: null,
   timerSeconds: MOCK_ROUND1_QUESTIONS[0].timeLimit,
@@ -88,6 +89,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'SET_ROUND': {
       const newRound = action.round;
+      if (state.round === 0 && newRound !== 0) {
+        stopGameIntroSound();
+      }
       const initialTimer = newRound === 1 
         ? state.round1.questions[state.round1.currentQuestionIndex]?.timeLimit || 10
         : newRound === 2 ? 20 : 0;
@@ -95,7 +99,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         round: newRound,
         phase: 'IDLE',
-        isStandby: newRound !== 3, // Khi chuyển vòng, tự động chuyển về màn hình chờ (riêng Round 3 vào thẳng tổng kết)
+        isStandby: newRound !== 3 && newRound !== 0, // Khi chuyển vòng 1, 2 thì về standby, vòng 0 là intro, vòng 3 vào thẳng tổng kết
         activeTeamId: null,
         isTimerRunning: false,
         timerSeconds: initialTimer,
@@ -622,6 +626,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'RESET_GAME': {
+      stopGameIntroSound();
       if (typeof window !== 'undefined') {
         try {
           localStorage.removeItem(STORAGE_KEY);
@@ -632,7 +637,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
       return {
         ...INITIAL_STATE,
-        isStandby: true,
+        round: 0,
+        isStandby: false,
         phase: 'IDLE',
         activeTeamId: null,
         isTimerRunning: false,
@@ -674,11 +680,61 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.round1?.questions) {
-          parsed.round1.questions = parsed.round1.questions.map((q: any) => ({
-            ...q,
-            correctOptionIndex: getCorrectOptionIndex(q),
+        if (parsed.teams && Array.isArray(parsed.teams)) {
+          const oldPresetNames = [
+            'Đội 1: Sao Khuê',
+            'Đội 2: Kim Quy',
+            'Đội 3: Hỏa Long',
+            'Đội 4: Thăng Long',
+            'Đội 5: Bạch Hổ',
+            'Đội 6: Huyền Vũ',
+            'Đội 1',
+            'Đội 2',
+            'Đội 3',
+            'Đội 4',
+            'Đội 5',
+            'Đội 6',
+          ];
+          parsed.teams = parsed.teams.map((t: any, idx: number) => {
+            const defaultTeam = defaultState.teams[idx] || defaultState.teams.find((dt) => dt.id === t.id);
+            if (!defaultTeam) return t;
+            if (!t.name || oldPresetNames.includes(t.name) || t.name.startsWith('Đội ')) {
+              return {
+                ...t,
+                name: defaultTeam.name,
+              };
+            }
+            return t;
+          });
+        }
+        if (parsed.round1) {
+          parsed.round1.questions = defaultState.round1.questions.map((defaultQ) => ({
+            ...defaultQ,
+            correctOptionIndex: getCorrectOptionIndex(defaultQ),
           }));
+          if (
+            typeof parsed.round1.currentQuestionIndex !== 'number' ||
+            parsed.round1.currentQuestionIndex >= defaultState.round1.questions.length ||
+            parsed.round1.currentQuestionIndex < 0
+          ) {
+            parsed.round1.currentQuestionIndex = 0;
+          }
+        }
+        if (parsed.round2?.obstacle) {
+          parsed.round2.obstacle = {
+            ...defaultState.round2.obstacle,
+            ...parsed.round2.obstacle,
+            keyword: defaultState.round2.obstacle.keyword,
+            description: defaultState.round2.obstacle.description,
+            imageUrl: defaultState.round2.obstacle.imageUrl,
+            clues: defaultState.round2.obstacle.clues.map((defaultClue) => {
+              const existing = parsed.round2.obstacle.clues?.find((c: any) => c.id === defaultClue.id);
+              return {
+                ...defaultClue,
+                isRevealed: existing ? existing.isRevealed : false,
+              };
+            }),
+          };
         }
         return {
           ...defaultState,
@@ -789,7 +845,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     prevIsActiveRef.current = isActive;
 
     const currentRound = state.round;
-    if (currentRound === 3) return;
+    if (currentRound === 0 || currentRound === 3) return;
     const totalSeconds = currentRound === 1
       ? (state.round1.questions[state.round1.currentQuestionIndex]?.timeLimit || 10)
       : (state.round2.obstacle.clues.find(c => c.id === state.round2.activeClueId)?.timeLimit || 20);

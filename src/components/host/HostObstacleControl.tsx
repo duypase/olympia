@@ -38,7 +38,7 @@ export const HostObstacleControl: React.FC = () => {
             VÒNG 2: VƯỢT CHƯỚNG NGẠI VẬT
           </span>
           <span className="text-xs text-slate-400 font-medium">
-            4 gợi ý mở 4 mảnh tranh • Đoán CNV bất kỳ lúc nào
+            6 gợi ý mở 6 mảnh tranh • Đoán CNV bất kỳ lúc nào
           </span>
         </div>
 
@@ -205,6 +205,15 @@ export const HostObstacleControl: React.FC = () => {
           <p className="font-display text-lg font-bold text-white">
             {activeClue.question}
           </p>
+
+          {activeClue.explanation && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+              <span className="font-bold uppercase tracking-wider text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-200">
+                Ý nghĩa / Ghi chú
+              </span>
+              <span>{activeClue.explanation}</span>
+            </div>
+          )}
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-800">
             {/* Timer Controller */}

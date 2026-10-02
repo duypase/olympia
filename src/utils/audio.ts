@@ -27,8 +27,18 @@ export function unlockAudioContext() {
   }
   const r1Audios = getRound1Audios();
   r1Audios.forEach((audio) => audio.load());
+  const gameIntro = getGameIntroAudio();
+  if (gameIntro) gameIntro.load();
   const r1NextQAudio = getRound1NextQuestionAudio();
   if (r1NextQAudio) r1NextQAudio.load();
+  const r1Intro = getRound1IntroAudio();
+  if (r1Intro) r1Intro.load();
+  const r2Start = getRound2StartAudio();
+  if (r2Start) r2Start.load();
+  const r2OpenClue = getRound2OpenClueAudio();
+  if (r2OpenClue) r2OpenClue.load();
+  const r2Solving = getRound2SolvingKeywordAudio();
+  if (r2Solving) r2Solving.load();
   const audio2 = getTimerAudio(2);
   if (audio2) audio2.load();
   const sAudio = getSolvedAudio();
@@ -70,6 +80,11 @@ export function setMuted(muted: boolean) {
     stopSolvedRound2();
     stopObstacleSolvedSound();
     stopCreditsSound();
+    stopGameIntroSound();
+    stopRound1IntroSound();
+    stopRound2StartSound();
+    stopRound2OpenClueSound();
+    stopRound2SolvingKeywordSound();
     if (correctAudio) correctAudio.pause();
   }
 }
@@ -79,8 +94,17 @@ export function isMuted(): boolean {
   return isSoundMuted;
 }
 
-const BASE_URL = import.meta.env.BASE_URL || '/';
-const getAssetUrl = (path: string) => {
+export const BASE_URL = import.meta.env.BASE_URL || '/';
+export const getAssetUrl = (path: string): string => {
+  if (!path) return '';
+  if (
+    path.startsWith('http://') ||
+    path.startsWith('https://') ||
+    path.startsWith('data:') ||
+    path.startsWith('blob:')
+  ) {
+    return path;
+  }
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   return `${BASE_URL}${cleanPath}`;
 };
@@ -153,6 +177,10 @@ export function startTimerSoundtrack(round: 1 | 2 = 1) {
     round2ChooseRowAudio.pause();
     round2ChooseRowAudio.currentTime = 0;
   }
+  stopGameIntroSound();
+  stopRound1IntroSound();
+  stopRound2StartSound();
+  stopRound2OpenClueSound();
   const audio = round === 1 ? getRandomRound1Audio() : getTimerAudio(round);
   if (!audio) return;
   activeCountdownAudio = audio;
@@ -310,11 +338,189 @@ export function playRound1NextQuestionSound() {
     typeof window === "undefined"
   )
     return;
+  stopRound1IntroSound();
   const audio = getRound1NextQuestionAudio();
   if (!audio) return;
   audio.currentTime = 0;
   audio.volume = 1.0;
   audio.play().catch(() => {});
+}
+
+let gameIntroAudio: HTMLAudioElement | null = null;
+
+export function getGameIntroAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!gameIntroAudio) {
+    gameIntroAudio = new Audio(getAssetUrl("/intro-game.ogg"));
+    gameIntroAudio.preload = "auto";
+  }
+  return gameIntroAudio;
+}
+
+export function playGameIntroSound() {
+  if (
+    !isPresentationEnvironment() ||
+    isSoundMuted ||
+    typeof window === "undefined"
+  )
+    return;
+  stopGameIntroSound();
+  const audio = getGameIntroAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {});
+}
+
+export function stopGameIntroSound() {
+  if (gameIntroAudio) {
+    gameIntroAudio.pause();
+    gameIntroAudio.currentTime = 0;
+  }
+}
+
+export function isGameIntroPlaying(): boolean {
+  return (
+    !!gameIntroAudio &&
+    !gameIntroAudio.paused &&
+    !gameIntroAudio.ended
+  );
+}
+
+let round1IntroAudio: HTMLAudioElement | null = null;
+
+export function getRound1IntroAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!round1IntroAudio) {
+    round1IntroAudio = new Audio(getAssetUrl("/round1_start.mpeg"));
+    round1IntroAudio.preload = "auto";
+  }
+  return round1IntroAudio;
+}
+
+export function playRound1IntroSound() {
+  if (
+    !isPresentationEnvironment() ||
+    isSoundMuted ||
+    typeof window === "undefined"
+  )
+    return;
+  stopGameIntroSound();
+  stopRound1IntroSound();
+  const audio = getRound1IntroAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {});
+}
+
+export function stopRound1IntroSound() {
+  if (round1IntroAudio) {
+    round1IntroAudio.pause();
+    round1IntroAudio.currentTime = 0;
+  }
+}
+
+let round2StartAudio: HTMLAudioElement | null = null;
+
+export function getRound2StartAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!round2StartAudio) {
+    round2StartAudio = new Audio(getAssetUrl("/round2_start.wav"));
+    round2StartAudio.preload = "auto";
+  }
+  return round2StartAudio;
+}
+
+export function playRound2StartSound() {
+  if (
+    !isPresentationEnvironment() ||
+    isSoundMuted ||
+    typeof window === "undefined"
+  )
+    return;
+  stopRound2StartSound();
+  const audio = getRound2StartAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {});
+}
+
+export function stopRound2StartSound() {
+  if (round2StartAudio) {
+    round2StartAudio.pause();
+    round2StartAudio.currentTime = 0;
+  }
+}
+
+let round2OpenClueAudio: HTMLAudioElement | null = null;
+
+export function getRound2OpenClueAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!round2OpenClueAudio) {
+    round2OpenClueAudio = new Audio(getAssetUrl("/round2_open_clue.wav"));
+    round2OpenClueAudio.preload = "auto";
+  }
+  return round2OpenClueAudio;
+}
+
+export function playRound2OpenClueSound() {
+  if (
+    !isPresentationEnvironment() ||
+    isSoundMuted ||
+    typeof window === "undefined"
+  )
+    return;
+  stopRound2StartSound();
+  stopRound2OpenClueSound();
+  const audio = getRound2OpenClueAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {});
+}
+
+export function stopRound2OpenClueSound() {
+  if (round2OpenClueAudio) {
+    round2OpenClueAudio.pause();
+    round2OpenClueAudio.currentTime = 0;
+  }
+}
+
+let round2SolvingKeywordAudio: HTMLAudioElement | null = null;
+
+export function getRound2SolvingKeywordAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!round2SolvingKeywordAudio) {
+    round2SolvingKeywordAudio = new Audio(getAssetUrl("/round2_solving_keyword.wav"));
+    round2SolvingKeywordAudio.preload = "auto";
+  }
+  return round2SolvingKeywordAudio;
+}
+
+export function playRound2SolvingKeywordSound() {
+  if (
+    !isPresentationEnvironment() ||
+    isSoundMuted ||
+    typeof window === "undefined"
+  )
+    return;
+  stopRound2SolvingKeywordSound();
+  stopTimerSoundtrack();
+  stopRound2OpenClueSound();
+  const audio = getRound2SolvingKeywordAudio();
+  if (!audio) return;
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play().catch(() => {});
+}
+
+export function stopRound2SolvingKeywordSound() {
+  if (round2SolvingKeywordAudio) {
+    round2SolvingKeywordAudio.pause();
+    round2SolvingKeywordAudio.currentTime = 0;
+  }
 }
 
 let round2ChooseRowAudio: HTMLAudioElement | null = null;
@@ -336,6 +542,7 @@ export function playRound2ChooseRowSound() {
     typeof window === "undefined"
   )
     return;
+  stopRound2OpenClueSound();
   const now = Date.now();
   if (now - lastChooseRowPlayTime < 300) return;
   lastChooseRowPlayTime = now;
@@ -370,6 +577,7 @@ export function playObstacleSolvedSound() {
   lastObstacleSolvedPlayTime = now;
   stopTimerSoundtrack();
   stopSolvedRound2();
+  stopRound2SolvingKeywordSound();
   const audio = getObstacleSolvedAudio();
   if (!audio) return;
   audio.currentTime = 0;
@@ -484,6 +692,7 @@ export function playCorrect() {
 }
 
 export function playWrong() {
+  stopRound2SolvingKeywordSound();
   if (!isPresentationEnvironment() || isSoundMuted) return;
   const ctx = getAudioContext();
   if (!ctx) return;

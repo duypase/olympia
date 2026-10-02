@@ -189,6 +189,16 @@ export const HostQuestionControl: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Host Textbook Citation & Notes */}
+        {currentQ?.explanation && (
+          <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-200/90 leading-relaxed shadow-sm">
+            <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-amber-400 mb-1 text-[11px]">
+              <span>📖 Dẫn chứng Giáo trình & Thuyết minh (Dành cho MC / Host):</span>
+            </div>
+            <p className="text-slate-200 leading-normal">{currentQ.explanation}</p>
+          </div>
+        )}
       </div>
 
       {/* Timer & Primary Control Bar */}

@@ -1,10 +1,51 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import {
+  playRound1IntroSound,
+  stopRound1IntroSound,
+  playRound2StartSound,
+  stopRound2StartSound,
+  getRound1IntroAudio,
+  getRound2StartAudio,
+} from '../../utils/audio';
 
 interface PresentationStandbyScreenProps {
   round: 1 | 2 | 3;
 }
 
 export const PresentationStandbyScreen: React.FC<PresentationStandbyScreenProps> = ({ round }) => {
+  // Phát nhạc chờ cho Vòng 1 và Vòng 2
+  useEffect(() => {
+    if (round === 1) {
+      playRound1IntroSound();
+    } else if (round === 2) {
+      playRound2StartSound();
+    }
+
+    // Xử lý trường hợp trình duyệt chặn autoplay trước khi có tương tác người dùng
+    const handleUserGesture = () => {
+      if (round === 1) {
+        const audio = getRound1IntroAudio();
+        if (audio && audio.paused) {
+          playRound1IntroSound();
+        }
+      } else if (round === 2) {
+        const audio = getRound2StartAudio();
+        if (audio && audio.paused) {
+          playRound2StartSound();
+        }
+      }
+    };
+
+    window.addEventListener('click', handleUserGesture, { once: true });
+    window.addEventListener('keydown', handleUserGesture, { once: true });
+
+    return () => {
+      stopRound1IntroSound();
+      stopRound2StartSound();
+      window.removeEventListener('click', handleUserGesture);
+      window.removeEventListener('keydown', handleUserGesture);
+    };
+  }, [round]);
   const roundTitle =
     round === 1
       ? 'KHỞI ĐỘNG'
@@ -58,8 +99,9 @@ export const PresentationStandbyScreen: React.FC<PresentationStandbyScreenProps>
           style={{
             letterSpacing: '0.06em',
             fontWeight: 800,
+            lineHeight: 1.3,
           }}
-          className={`font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-wider uppercase drop-shadow-2xl transition-all duration-700 ${
+          className={`font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-wider uppercase drop-shadow-2xl transition-all duration-700 py-3 leading-[1.3] ${
             round === 1
               ? 'bg-gradient-to-b from-white via-sky-100 to-sky-300 bg-clip-text text-transparent'
               : 'bg-gradient-to-b from-white via-amber-100 to-amber-300 bg-clip-text text-transparent'

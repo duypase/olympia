@@ -9,8 +9,14 @@ import {
   playClueRevealSound,
   playRound2ChooseRowSound,
   playObstacleSolvedSound,
+  playRound2OpenClueSound,
+  stopRound2OpenClueSound,
+  playRound2SolvingKeywordSound,
+  stopRound2SolvingKeywordSound,
   stopTimerSoundtrack,
+  getAssetUrl,
 } from "../../utils/audio";
+import round2VisualClueImg from "../../assets/round2_visual_clue.png";
 
 interface ClueLetterBoxProps {
   char: string;
@@ -128,14 +134,8 @@ const ClueLetterBox: React.FC<ClueLetterBoxProps> = ({
 
 export const PresentationObstacleBoard: React.FC = () => {
   const { state } = useGame();
-  const {
-    round2,
-    phase,
-    timerSeconds,
-    isTimerRunning,
-    activeTeamId,
-    teams,
-  } = state;
+  const { round2, phase, timerSeconds, isTimerRunning, activeTeamId, teams } =
+    state;
   const { obstacle, activeClueId, obstacleSolvedBy } = round2;
 
   const activeClue = obstacle.clues.find((c) => c.id === activeClueId);
@@ -156,6 +156,31 @@ export const PresentationObstacleBoard: React.FC = () => {
   useEffect(() => {
     setIsCueHidden(false);
   }, [activeClueId, phase]);
+
+  // Phát âm thanh mở màn hình Round 2 khi chuyển từ standby sang màn hình chính, dọn dẹp khi unmount
+  useEffect(() => {
+    playRound2OpenClueSound();
+    return () => {
+      stopRound2OpenClueSound();
+      stopRound2SolvingKeywordSound();
+    };
+  }, []);
+
+  // Dừng âm thanh mở màn hình khi bắt đầu đếm giờ hoặc khi chọn hàng ngang
+  useEffect(() => {
+    if (isTimerRunning || activeClueId !== null) {
+      stopRound2OpenClueSound();
+    }
+  }, [isTimerRunning, activeClueId]);
+
+  // Phát sfx hồi hộp khi có đội bấm chuông xin đoán chướng ngại vật
+  useEffect(() => {
+    if (phase === "OBSTACLE_GUESSING") {
+      playRound2SolvingKeywordSound();
+    } else {
+      stopRound2SolvingKeywordSound();
+    }
+  }, [phase]);
 
   // Lắng nghe sự kiện Host chọn một hàng ngang
   useEffect(() => {
@@ -226,10 +251,7 @@ export const PresentationObstacleBoard: React.FC = () => {
     }
   }, [timerSeconds, phase]);
 
-  const isTimerVisible =
-    phase !== "IDLE" &&
-    !isExpiredHidden &&
-    !isCueHidden;
+  const isTimerVisible = phase !== "IDLE" && !isExpiredHidden && !isCueHidden;
 
   // Trigger confetti when obstacle is solved
   useEffect(() => {
@@ -275,6 +297,7 @@ export const PresentationObstacleBoard: React.FC = () => {
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 500,
               fontSize: "15px",
+              lineHeight: "1.4",
             }}
             className="tracking-widest uppercase"
           >
@@ -304,7 +327,7 @@ export const PresentationObstacleBoard: React.FC = () => {
       {/* Center Zone: Title + Puzzle Board and Word Grid */}
       <div className="my-auto flex flex-col items-center justify-center gap-6 py-2 w-full max-w-6xl">
         {/* Tiêu đề Chướng ngại vật nằm trong màn hình chính (trên khối Puzzle và Hàng ngang) */}
-        <h2 className="font-display font-bold text-xl md:text-2xl lg:text-3xl text-white uppercase drop-shadow-sm text-center">
+        <h2 className="font-display font-bold text-xl md:text-2xl lg:text-3xl text-white uppercase drop-shadow-sm text-center leading-normal py-1">
           CHƯỚNG NGẠI VẬT CÓ {obstacle.keyword.replace(/\s+/g, "").length} CHỮ
           CÁI
         </h2>
@@ -315,9 +338,21 @@ export const PresentationObstacleBoard: React.FC = () => {
           <div className="relative w-full max-w-[507px] aspect-[4/3] overflow-hidden shadow-2xl rounded-[4px] border border-white/10 bg-white/[0.04] shrink-0">
             {/* Background Revealed Image */}
             <img
-              src={obstacle.imageUrl}
+              src={
+                obstacle.imageUrl
+                  ? getAssetUrl(obstacle.imageUrl)
+                  : getAssetUrl("/round2_visual_clue.png")
+              }
               alt="Chướng ngại vật"
               className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith("/round2_visual_clue.png")) {
+                  target.src = getAssetUrl("/round2_visual_clue.png");
+                } else if (round2VisualClueImg && target.src !== round2VisualClueImg) {
+                  target.src = round2VisualClueImg;
+                }
+              }}
             />
 
             {/* 6 Puzzle Overlay Tiles with gap-0 */}
@@ -328,7 +363,7 @@ export const PresentationObstacleBoard: React.FC = () => {
                 paddingTop: "0px",
                 paddingBottom: "0px",
               }}
-              className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-0 bg-slate-950/40"
+              className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-0"
             >
               {obstacle.clues.map((clue) => {
                 const isRevealed = clue.isRevealed || obstacle.isFullyRevealed;
@@ -338,7 +373,7 @@ export const PresentationObstacleBoard: React.FC = () => {
                     className={`relative flex items-center justify-center transition-[opacity,transform] duration-700 ease-in-out ${
                       isRevealed
                         ? "opacity-0 pointer-events-none scale-95"
-                        : "opacity-100 bg-slate-900/80 backdrop-blur-lg border border-slate-700/60"
+                        : "opacity-100 bg-slate-900 border border-slate-700/60"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-1.5 text-center p-2">

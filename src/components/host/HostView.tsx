@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGame } from '../../context/useGame';
+import { HostIntroControl } from './HostIntroControl';
 import { HostQuestionControl } from './HostQuestionControl';
 import { HostObstacleControl } from './HostObstacleControl';
 import { HostFinalSummaryControl } from './HostFinalSummaryControl';
@@ -170,6 +171,16 @@ export const HostView: React.FC<HostViewProps> = ({ onOpenPresentationWindow }) 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
             <button
+              onClick={() => dispatch({ type: 'SET_ROUND', round: 0 })}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                state.round === 0
+                  ? 'bg-amber-400 text-black shadow-md shadow-amber-400/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              KHAI MẠC / INTRO
+            </button>
+            <button
               onClick={() => dispatch({ type: 'SET_ROUND', round: 1 })}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 state.round === 1
@@ -202,27 +213,29 @@ export const HostView: React.FC<HostViewProps> = ({ onOpenPresentationWindow }) 
           </div>
 
           {/* Standby / Active Stage Toggle Button for Host */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-            {state.isStandby ? (
-              <button
-                onClick={() => dispatch({ type: 'SET_STANDBY', isStandby: false })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-emerald-500/20"
-                title="Bắt đầu vòng thi (Chuyển màn hình chiếu từ tên vòng thi sang giao diện thi đấu)"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Bắt đầu vòng thi</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => dispatch({ type: 'SET_STANDBY', isStandby: true })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 text-xs font-bold transition-all cursor-pointer"
-                title="Quay lại màn hình chờ (Hiện tên vòng thi trên màn hình chiếu, ẩn câu hỏi)"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Màn hình chờ</span>
-              </button>
-            )}
-          </div>
+          {state.round !== 0 && (
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              {state.isStandby ? (
+                <button
+                  onClick={() => dispatch({ type: 'SET_STANDBY', isStandby: false })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+                  title="Bắt đầu vòng thi (Chuyển màn hình chiếu từ tên vòng thi sang giao diện thi đấu)"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Bắt đầu vòng thi</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => dispatch({ type: 'SET_STANDBY', isStandby: true })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/30 text-xs font-bold transition-all cursor-pointer"
+                  title="Quay lại màn hình chờ (Hiện tên vòng thi trên màn hình chiếu, ẩn câu hỏi)"
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Màn hình chờ</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Header Right Actions */}
@@ -310,7 +323,9 @@ export const HostView: React.FC<HostViewProps> = ({ onOpenPresentationWindow }) 
         </aside>
 
         <main className="flex-1 min-w-0 w-full flex flex-col gap-6">
-          {state.round === 1 ? (
+          {state.round === 0 ? (
+            <HostIntroControl />
+          ) : state.round === 1 ? (
             <HostQuestionControl />
           ) : state.round === 2 ? (
             <HostObstacleControl />

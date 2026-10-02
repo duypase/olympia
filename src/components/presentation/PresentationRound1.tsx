@@ -3,7 +3,12 @@ import { motion } from 'motion/react';
 import { useGame } from '../../context/useGame';
 import { PresentationTimer } from './PresentationTimer';
 import { getCorrectOptionIndex } from '../../data/mockQuestions';
-import { playCorrect, playWrong, playRound1NextQuestionSound } from '../../utils/audio';
+import {
+  playCorrect,
+  playWrong,
+  playRound1NextQuestionSound,
+  stopRound1IntroSound,
+} from '../../utils/audio';
 import confetti from 'canvas-confetti';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
@@ -14,6 +19,11 @@ export const PresentationRound1: React.FC = () => {
   const { round1, phase, timerSeconds, isTimerRunning } = state;
   const currentQ = round1.questions[round1.currentQuestionIndex];
   const correctOptionIndex = getCorrectOptionIndex(currentQ);
+
+  // Đảm bảo dừng nhạc intro Vòng 1 khi vào màn hình câu hỏi
+  useEffect(() => {
+    stopRound1IntroSound();
+  }, []);
 
   // Trigger sound effect on opening a new question in Round 1
   useEffect(() => {
@@ -88,6 +98,7 @@ export const PresentationRound1: React.FC = () => {
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 500,
               fontSize: '15px',
+              lineHeight: '1.4',
             }}
             className="tracking-widest uppercase"
           >

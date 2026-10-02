@@ -13,6 +13,7 @@ export type Round1Question = {
   answer: string;
   correctOptionIndex?: number;
   timeLimit: number; // in seconds, e.g. 10 or 15
+  explanation?: string; // Dẫn chứng giáo trình & ghi chú thuyết minh cho MC/Host
 };
 
 export type ObstacleClue = {
@@ -22,6 +23,7 @@ export type ObstacleClue = {
   answer: string;
   isRevealed: boolean;
   timeLimit: number;
+  explanation?: string; // Ý nghĩa / ghi chú thuyết minh cho MC/Host
 };
 
 export type ObstacleData = {
@@ -41,7 +43,7 @@ export type GamePhase =
   | 'OBSTACLE_GUESSING';  // Đang trong trạng thái có đội xin đoán chướng ngại vật
 
 export type GameState = {
-  round: 1 | 2 | 3;
+  round: 0 | 1 | 2 | 3;
   phase: GamePhase;
   isStandby: boolean; // Trạng thái màn hình chờ (true: hiện màn hình tên vòng thi, false: vào giao diện thi đấu)
   teams: Team[];
@@ -83,7 +85,7 @@ export type GameState = {
 };
 
 export type GameAction =
-  | { type: 'SET_ROUND'; round: 1 | 2 | 3 }
+  | { type: 'SET_ROUND'; round: 0 | 1 | 2 | 3 }
   | { type: 'SET_STANDBY'; isStandby: boolean }
   | { type: 'START_QUESTION' }
   | { type: 'BEGIN_COUNTDOWN' }

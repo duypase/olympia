@@ -46,7 +46,7 @@ export const HostTeamManagerModal: React.FC<HostTeamManagerModalProps> = ({
         <form onSubmit={handleAddTeam} className="flex gap-2">
           <input
             type="text"
-            placeholder="Nhập tên đội mới (ví dụ: Đội Sao Băng)..."
+            placeholder="Nhập tên đội mới (ví dụ: NHÓM 8)..."
             value={newTeamName}
             onChange={(e) => setNewTeamName(e.target.value)}
             className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-amber-400"

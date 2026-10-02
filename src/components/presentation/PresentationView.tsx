@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useGame } from '../../context/useGame';
+import { PresentationIntroScreen } from './PresentationIntroScreen';
 import { PresentationRound1 } from './PresentationRound1';
 import { PresentationObstacleBoard } from './PresentationObstacleBoard';
 import { PresentationScoreboard } from './PresentationScoreboard';
@@ -57,6 +58,8 @@ export const PresentationView: React.FC = () => {
       <main className="flex-1 w-full h-full flex items-center justify-center relative z-10">
         {state.phase === 'SHOWING_SCOREBOARD' ? (
           <PresentationScoreboard />
+        ) : state.round === 0 ? (
+          <PresentationIntroScreen />
         ) : state.isStandby ? (
           <PresentationStandbyScreen round={state.round} />
         ) : state.round === 1 ? (

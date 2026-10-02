@@ -4,7 +4,6 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/olympia/',
   plugins: [react(), tailwindcss()],
   server: {
     host: '0.0.0.0',
